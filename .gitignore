@@ -35,3 +35,8 @@ signing.properties
 
 # Claude Code worktrees
 .claude/worktrees/
+
+# Worker (proxy/)
+node_modules/
+.wrangler/
+.dev.vars
