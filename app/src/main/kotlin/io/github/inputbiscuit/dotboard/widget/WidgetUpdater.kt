@@ -10,14 +10,12 @@ import android.util.Log
 import android.util.SizeF
 import io.github.inputbiscuit.dotboard.app
 import io.github.inputbiscuit.dotboard.core.data.BoardQuery
-import io.github.inputbiscuit.dotboard.core.data.CachingDepartureRepository
-import io.github.inputbiscuit.dotboard.core.data.DepartureException
 import io.github.inputbiscuit.dotboard.core.model.Departure
 import io.github.inputbiscuit.dotboard.core.model.DepartureStatus
-import io.github.inputbiscuit.dotboard.core.model.withoutDeparted
 import io.github.inputbiscuit.dotboard.core.render.BoardContent
 import io.github.inputbiscuit.dotboard.core.render.BoardFrame
-import io.github.inputbiscuit.dotboard.core.render.toBoardMessage
+import io.github.inputbiscuit.dotboard.data.LoadedBoard
+import io.github.inputbiscuit.dotboard.data.load
 import io.github.inputbiscuit.dotboard.location.ApproximateLocation
 import java.time.LocalTime
 
@@ -62,13 +60,14 @@ object WidgetUpdater {
             var config = app.widgetConfigs.get(id)
             if (config?.followLocation == true) config = follow(context, id, config, location)
             val crs = config?.crs ?: settings.defaultCrs
-            val content = if (crs.length != 3) {
-                BoardContent.Message("Tap to set up")
+            val loaded = if (crs.length != 3) {
+                LoadedBoard(BoardContent.Message("Tap to set up"))
             } else {
-                load(repo, BoardQuery.of(crs, config?.filterCrs ?: settings.defaultFilterCrs), maxAge)
+                repo.load(BoardQuery.of(crs, config?.filterCrs ?: settings.defaultFilterCrs), maxAge)
             }
+            val content = loaded.content
             // The launcher ticks the clock (TextClock), so the board leaves the digits out.
-            val frame = BoardFrame(content, LocalTime.now(), settings.use24h, drawClock = false)
+            val frame = BoardFrame(content, LocalTime.now(), settings.use24h, drawClock = false, updatedAt = loaded.updatedAt)
             (content as? BoardContent.Departures)?.board?.departures?.firstOrNull()?.let { first ->
                 millisUntilDeparted(first)?.let { nextDeparture = minOf(nextDeparture ?: it, it) }
             }
@@ -123,16 +122,6 @@ object WidgetUpdater {
         val minutes = Math.floorMod(departs.toSecondOfDay() / 60 - now.toSecondOfDay() / 60, 24 * 60)
         if (minutes > 12 * 60) return null
         return (minutes + 2) * 60_000L - now.second * 1000L
-    }
-
-    private suspend fun load(repo: CachingDepartureRepository, query: BoardQuery, maxAge: Long): BoardContent {
-        val now = LocalTime.now()
-        return try {
-            BoardContent.Departures(repo.cached(query, maxAge).board.withoutDeparted(now))
-        } catch (e: DepartureException) {
-            // Keep showing the last board we had (minus departed trains) rather than an error, if there is one.
-            repo.peek(query)?.let { BoardContent.Departures(it.board.withoutDeparted(now)) } ?: e.toBoardMessage()
-        }
     }
 
     /** The sizes (in dp) the widget is currently shown at, e.g. both screens of a foldable. */

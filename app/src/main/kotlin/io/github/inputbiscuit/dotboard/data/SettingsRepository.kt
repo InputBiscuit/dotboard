@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.map
 internal val Context.settingsDataStore by preferencesDataStore(name = "settings")
 
 data class Settings(
-    val useSampleData: Boolean = true,
+    val useSampleData: Boolean = false,
     val sampleScenario: FakeScenario = FakeScenario.MIXED,
     val defaultCrs: String = "PAD",
     val defaultFilterCrs: String = "",
@@ -53,7 +53,7 @@ class SettingsRepository(private val context: Context) {
     }
 
     private fun Preferences.toSettings() = Settings(
-        useSampleData = this[USE_SAMPLE] ?: true,
+        useSampleData = this[USE_SAMPLE] ?: false,
         sampleScenario = enumOrDefault(this[SCENARIO], FakeScenario.MIXED),
         defaultCrs = this[DEFAULT_CRS] ?: "PAD",
         defaultFilterCrs = this[DEFAULT_FILTER].orEmpty(),

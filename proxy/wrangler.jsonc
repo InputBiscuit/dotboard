@@ -1,0 +1,23 @@
+{
+  // Dotboard API proxy: forwards departure-board requests to the Rail Data Marketplace
+  // Live Departure Board API with a key held as a Worker secret (RDM_API_KEY), so the app
+  // doesn't ship a key. Set the secret with: npx wrangler secret put RDM_API_KEY
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "departures",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+
+  // Workers Cache: responses are cached in front of the Worker for as long as their
+  // Cache-Control header says (each board ~45 s), so users watching the same station share
+  // one upstream request. Works on workers.dev, on the Free plan.
+  "cache": { "enabled": true },
+
+  // Per-client rate limit on cache misses (approximate, counted per Cloudflare location).
+  "ratelimits": [
+    { "name": "LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } }
+  ],
+
+  // No request logging: the Worker never records IP addresses or request details.
+  "observability": { "enabled": false }
+}

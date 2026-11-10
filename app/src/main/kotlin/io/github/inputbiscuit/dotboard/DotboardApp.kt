@@ -8,6 +8,7 @@ import io.github.inputbiscuit.dotboard.core.data.FakeScenario
 import io.github.inputbiscuit.dotboard.core.data.FileBoardStore
 import io.github.inputbiscuit.dotboard.core.data.InMemoryBoardStore
 import io.github.inputbiscuit.dotboard.core.data.LdbwsDepartureRepository
+import io.github.inputbiscuit.dotboard.core.data.ProxyDepartureRepository
 import io.github.inputbiscuit.dotboard.data.ApiKeyStore
 import io.github.inputbiscuit.dotboard.data.SettingsRepository
 import io.github.inputbiscuit.dotboard.data.StationRepository
@@ -30,6 +31,7 @@ class DotboardApp : Application() {
         if (WidgetUpdater.widgetIds(this).isNotEmpty()) WidgetScheduler.ensure(this)
     }
 
+    /** Live data with the user's own key, straight to the Rail Data Marketplace. */
     private val live by lazy {
         CachingDepartureRepository(
             LdbwsDepartureRepository(apiKey = { apiKeys.get() }),
@@ -37,13 +39,27 @@ class DotboardApp : Application() {
         )
     }
 
+    /** Live data through Dotboard's API proxy (no key needed). */
+    private val proxied by lazy {
+        CachingDepartureRepository(
+            ProxyDepartureRepository(BuildConfig.PROXY_BASE_URL),
+            FileBoardStore(File(cacheDir, "boards-proxy")),
+        )
+    }
+
+    /** Whether live data currently goes through the proxy (no own key entered and a proxy is built in). */
+    suspend fun usesProxy(): Boolean = BuildConfig.PROXY_BASE_URL.isNotBlank() && apiKeys.get().isBlank()
+
     // One cache per scenario, so switching scenario never shows another scenario's cached board.
     private val samples = ConcurrentHashMap<FakeScenario, CachingDepartureRepository>()
 
-    /** The departures source selected in settings: sample data (default) or the live API. */
+    /**
+     * The departures source: sample data if chosen in settings; otherwise live, with the user's own key if
+     * they've entered one, else through the proxy.
+     */
     suspend fun departures(): CachingDepartureRepository {
         val s = settings.current()
-        if (!s.useSampleData) return live
+        if (!s.useSampleData) return if (usesProxy()) proxied else live
         return samples.getOrPut(s.sampleScenario) {
             CachingDepartureRepository(
                 FakeDepartureRepository(scenario = { s.sampleScenario }, stationName = { stations.name(it) }),

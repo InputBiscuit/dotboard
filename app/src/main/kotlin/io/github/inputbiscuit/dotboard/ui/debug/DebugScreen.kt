@@ -80,7 +80,7 @@ fun DebugScreen(onBack: () -> Unit, vm: DebugViewModel = viewModel()) {
                     Column(Modifier.weight(1f)) {
                         Text("Use sample data", style = MaterialTheme.typography.titleMedium)
                         Text(
-                            if (state.useSampleData) "Built-in sample boards, no API calls" else "Live Rail Data Marketplace API",
+                            if (state.useSampleData) "Built-in sample boards, no API calls" else "Live data (through Dotboard's proxy unless you add your own key)",
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
@@ -112,7 +112,7 @@ fun DebugScreen(onBack: () -> Unit, vm: DebugViewModel = viewModel()) {
                     OutlinedTextField(
                         value = state.apiKey,
                         onValueChange = vm::onApiKey,
-                        label = { Text("API key (consumer key)") },
+                        label = { Text("Your own API key (optional)") },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Next),

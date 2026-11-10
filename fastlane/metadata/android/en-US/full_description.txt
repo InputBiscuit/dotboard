@@ -9,13 +9,14 @@
 <li>Resizable: bigger boards show more trains, and it adapts to both screens of a foldable</li>
 <li>Amber, yellow-green or white LEDs, and a 12- or 24-hour clock</li>
 <li>Battery-friendly: the animation and clock run in your launcher, so the app only wakes up to refresh departures</li>
-<li>Built-in sample boards, so you can try it before you have an API key</li>
+<li>Works straight away: no sign-up or API key needed</li>
+<li>Use my location: find your nearest station, or have a board follow you</li>
 </ul>
 
-<p><b>You need a free API key</b></p>
-<p>Live times come from the free "Live Departure Board" feed on the Rail Data Marketplace (raildata.org.uk). Register there, subscribe to the feed and paste your consumer key into Dotboard. The key is stored encrypted on your phone and only sent to the Rail Data Marketplace.</p>
+<p><b>Live data</b></p>
+<p>Live times come from the "Live Departure Board" feed on the Rail Data Marketplace (raildata.org.uk). By default they're fetched through Dotboard's small proxy, so you don't need an account or key. If you prefer, add your own free key in Settings and the app talks to the Rail Data Marketplace directly.</p>
 
 <p><b>Privacy</b></p>
-<p>No ads, no tracking, no analytics and no Google Play Services. Dotboard only connects to the Rail Data Marketplace to fetch departures.</p>
+<p>No ads, no tracking, no analytics and no Google Play Services. To fetch departures Dotboard connects only to its proxy (which sees the station you ask for and your IP address, uses the IP briefly to prevent abuse, and keeps no logs) or, with your own key, directly to the Rail Data Marketplace. Your location, if you use it, never leaves your phone.</p>
 
 <p>Dotboard is an independent project and isn't affiliated with any rail company. It's free software under the GNU GPL v3. The Dot Matrix typeface is by Daniel Hart (SIL Open Font License 1.1).</p>

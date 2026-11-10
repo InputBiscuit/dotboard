@@ -64,25 +64,7 @@ class LdbwsClient(
             .header("Accept", "application/json")
             .build()
 
-        val body = withContext(Dispatchers.IO) {
-            try {
-                http.newCall(request).execute().use { response ->
-                    val text = response.body.string()
-                    if (!response.isSuccessful) throw httpError(response.code, text)
-                    text
-                }
-            } catch (e: IOException) {
-                throw DepartureException.Network(e)
-            }
-        }
-
-        return try {
-            json.decodeFromString(StationBoard.serializer(), body)
-        } catch (e: SerializationException) {
-            throw DepartureException.BadResponse(e)
-        } catch (e: IllegalArgumentException) {
-            throw DepartureException.BadResponse(e)
-        }
+        return fetchStationBoard(http, request, ::httpError)
     }
 
     private fun httpError(code: Int, body: String): DepartureException {
@@ -111,5 +93,34 @@ class LdbwsClient(
                 .readTimeout(20, TimeUnit.SECONDS)
                 .build()
         }
+    }
+}
+
+/**
+ * Runs [request] and decodes the LDBWS board JSON, mapping failures to [DepartureException]:
+ * network problems → Network, non-2xx → [httpError], undecodable bodies → BadResponse.
+ */
+internal suspend fun fetchStationBoard(
+    http: OkHttpClient,
+    request: Request,
+    httpError: (code: Int, body: String) -> DepartureException,
+): StationBoard {
+    val body = withContext(Dispatchers.IO) {
+        try {
+            http.newCall(request).execute().use { response ->
+                val text = response.body.string()
+                if (!response.isSuccessful) throw httpError(response.code, text)
+                text
+            }
+        } catch (e: IOException) {
+            throw DepartureException.Network(e)
+        }
+    }
+    return try {
+        LdbwsClient.json.decodeFromString(StationBoard.serializer(), body)
+    } catch (e: SerializationException) {
+        throw DepartureException.BadResponse(e)
+    } catch (e: IllegalArgumentException) {
+        throw DepartureException.BadResponse(e)
     }
 }

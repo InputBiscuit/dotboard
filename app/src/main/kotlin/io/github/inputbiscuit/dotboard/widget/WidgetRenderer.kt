@@ -178,7 +178,9 @@ object WidgetRenderer {
         fun clock(segment: Segment, use24h: Boolean): RemoteViews = RemoteViews(pkg, R.layout.widget_segment_clock).apply {
             setImageViewBitmap(R.id.image, bitmap(widgetRenderer.renderSegment(plan, segment, 0)))
             setImageViewBitmap(R.id.mask, mask(segment))
-            setInt(R.id.clock_area, "setBackgroundColor", theme.palette.unlit)
+            // Unlit colour only behind the TextClocks; elsewhere the band's bitmap (unlit dots, and "Updated hh:mm"
+            // when the board is stale) shows through the mask.
+            setInt(R.id.clock_row, "setBackgroundColor", theme.palette.unlit)
 
             val main = if (use24h) "HH:mm" else "h:mm"
             val (mainSize, mainAscent) = fitSystemFont("sans-serif", CLOCK_ROWS * pitch, "0")
