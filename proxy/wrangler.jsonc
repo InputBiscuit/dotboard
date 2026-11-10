@@ -3,7 +3,7 @@
   // Live Departure Board API with a key held as a Worker secret (RDM_API_KEY), so the app
   // doesn't ship a key. Set the secret with: npx wrangler secret put RDM_API_KEY
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "dotboard-proxy",
+  "name": "departures",
   "main": "src/index.js",
   "compatibility_date": "2026-11-01",
   "workers_dev": true,

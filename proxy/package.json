@@ -1,5 +1,5 @@
 {
-  "name": "dotboard-proxy",
+  "name": "departures-proxy",
   "private": true,
   "type": "module",
   "scripts": {
