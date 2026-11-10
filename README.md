@@ -38,7 +38,6 @@ phone. You may need to allow installing apps from your browser or file manager.
 2. Tap **Add app** and paste this repository's URL.
 3. Tap **Add**, then **Install**. Obtainium will notify you when a new release is out.
 
-(Obtainium needs the repository to be public, or a GitHub token added in its settings.)
 
 ## Live data and privacy
 
