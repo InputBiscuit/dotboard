@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One horizontal slice of the board. Width fills the widget; height follows the bitmap's aspect ratio,
+     so every slice scales by the same factor and they line up exactly. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/image"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:adjustViewBounds="true"
+    android:importantForAccessibility="no"
+    android:scaleType="fitXY" />

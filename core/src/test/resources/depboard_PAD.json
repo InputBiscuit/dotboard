@@ -1,0 +1,68 @@
+{
+  "trainServices": [
+    {
+      "subsequentCallingPoints": [
+        {
+          "callingPoint": [
+            { "locationName": "Ealing Broadway", "crs": "EAL", "st": "22:17", "et": "On time", "isCancelled": false, "length": 0 },
+            { "locationName": "Slough", "crs": "SLO", "st": "22:31", "et": "On time", "isCancelled": false, "length": 0 },
+            { "locationName": "Maidenhead", "crs": "MAI", "st": "22:38", "et": "On time", "isCancelled": false, "length": 0 },
+            { "locationName": "Reading", "crs": "RDG", "st": "22:52", "et": "On time", "isCancelled": false, "length": 0 }
+          ],
+          "serviceType": "train",
+          "serviceChangeRequired": false,
+          "assocIsCancelled": false
+        }
+      ],
+      "origin": [ { "locationName": "London Paddington", "crs": "PAD", "assocIsCancelled": false } ],
+      "destination": [ { "locationName": "Reading", "crs": "RDG", "assocIsCancelled": false } ],
+      "std": "22:09",
+      "etd": "On time",
+      "platform": "2",
+      "operator": "Great Western Railway",
+      "operatorCode": "GW",
+      "isCircularRoute": false,
+      "isCancelled": false,
+      "filterLocationCancelled": false,
+      "serviceType": "train",
+      "length": 0,
+      "serviceID": "1234567PADTON__"
+    },
+    {
+      "subsequentCallingPoints": [
+        { "callingPoint": [ { "locationName": "Oxford", "crs": "OXF", "st": "23:18", "et": "23:23" } ] }
+      ],
+      "origin": [ { "locationName": "London Paddington", "crs": "PAD" } ],
+      "destination": [ { "locationName": "Oxford", "crs": "OXF", "via": "via Reading" } ],
+      "std": "22:14",
+      "etd": "22:19",
+      "operator": "Great Western Railway",
+      "delayReason": "This train has been delayed by a broken down train",
+      "serviceID": "2234567PADTON__"
+    },
+    {
+      "origin": [ { "locationName": "London Paddington", "crs": "PAD" } ],
+      "destination": [ { "locationName": "Bristol Temple Meads", "crs": "BRI" } ],
+      "std": "22:39",
+      "etd": "Cancelled",
+      "platform": null,
+      "isCancelled": true,
+      "cancelReason": "This train has been cancelled because of a shortage of train crew",
+      "serviceID": "3234567PADTON__",
+      "someFutureField": { "nested": true }
+    },
+    {
+      "destination": [ { "locationName": "Didcot Parkway", "crs": "DID" } ],
+      "std": "22:54",
+      "etd": "Delayed"
+    }
+  ],
+  "generatedAt": "2026-11-09T22:05:41.1234567+00:00",
+  "locationName": "London Paddington",
+  "crs": "PAD",
+  "nrccMessages": [
+    { "Value": "\nDisruption between <a href=\"https://example.invalid/\">Reading &amp; Didcot Parkway</a>." }
+  ],
+  "platformAvailable": true,
+  "areServicesAvailable": true
+}

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds install alongside the release (".debug" app id), so give them distinct names. -->
+<resources>
+    <string name="app_name">Dotboard Debug</string>
+    <string name="widget_name">Departure board (debug)</string>
+</resources>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Calling at" row, scrolled by the launcher (no app wake-ups):
+     1. a bitmap of the row (the dot-font label and unlit dots), which also sets the row's height;
+     2. a marquee TextView in a system font, on the unlit LED colour, starting after the label;
+     3. a dot mask on top: opaque between dots, see-through at each dot, so the moving text lights LED dots
+        on the board's grid. (Custom fonts are ignored in RemoteViews, hence the mask.)
+     Text size, margins and colours are set at runtime to match the dot pitch and theme. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY" />
+
+    <TextView
+        android:id="@+id/marquee"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:ellipsize="marquee"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:fontFamily="sans-serif-condensed-medium"
+        android:gravity="top|start"
+        android:includeFontPadding="false"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:fadingEdgeLength="0dp"
+        android:requiresFadingEdge="none"
+        android:scrollHorizontally="true"
+        android:singleLine="true"
+        android:textStyle="normal">
+
+        <requestFocus />
+    </TextView>
+
+    <ImageView
+        android:id="@+id/mask"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY" />
+</FrameLayout>

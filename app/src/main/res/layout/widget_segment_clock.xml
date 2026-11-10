@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The board clock, kept ticking by the launcher (TextClock), so the app never wakes for it.
+     Big HH:mm and smaller :ss share a baseline; the dot mask on top turns them into LED dots. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- Unlit dots; sets the band's height. -->
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY" />
+
+    <FrameLayout
+        android:id="@+id/clock_area"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/clock_row"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:baselineAligned="true"
+            android:orientation="horizontal">
+
+            <TextClock
+                android:id="@+id/clock_main"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif"
+                android:includeFontPadding="false"
+                android:textStyle="bold" />
+
+            <TextClock
+                android:id="@+id/clock_seconds"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif"
+                android:includeFontPadding="false"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <ImageView
+        android:id="@+id/mask"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY" />
+</FrameLayout>

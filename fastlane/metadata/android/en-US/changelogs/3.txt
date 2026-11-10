@@ -1,0 +1,6 @@
+First public release.
+
+• Dot-matrix departure board widget with live UK departures (free Rail Data Marketplace API key needed)
+• Scrolling calling points, alternating trains and a ticking clock, animated by your launcher
+• Several resizable boards in amber, yellow-green or white
+• "Use my location" picks your nearest station, and a board can follow you (approximate location only)

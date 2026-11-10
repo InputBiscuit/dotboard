@@ -1,0 +1,59 @@
+{
+  "trainServices": [
+    {
+      "std": "10:00",
+      "etd": "On time",
+      "destination": [ { "locationName": "London Paddington", "crs": "PAD" } ],
+      "formation": {
+        "loadingCategory": { "code": "2", "colour": "Amber" },
+        "coaches": [
+          { "number": "A", "coachClass": "First", "toilet": { "status": "InService", "Value": "Accessible" }, "loading": 20, "loadingSpecified": true },
+          { "number": "B", "coachClass": "Standard", "toilet": { "status": "NotInService", "Value": "Standard" }, "loading": 85, "loadingSpecified": true },
+          { "number": "C", "coachClass": "Mixed", "toilet": { "Value": "None" }, "loading": 0, "loadingSpecified": false }
+        ]
+      },
+      "subsequentCallingPoints": [ { "callingPoint": [ { "locationName": "London Paddington", "crs": "PAD", "st": "10:25", "et": "On time" } ] } ]
+    },
+    {
+      "std": "10:05",
+      "etd": "On time",
+      "destination": [ { "locationName": "Basingstoke", "crs": "BSK" } ],
+      "subsequentCallingPoints": [
+        {
+          "callingPoint": [
+            {
+              "locationName": "Mortimer", "crs": "MOR", "st": "10:12", "et": "On time",
+              "formation": { "coaches": [
+                { "number": "1", "coachClass": "Standard", "toilet": { "status": "InService", "value": "Standard" }, "loading": 40, "loadingSpecified": true },
+                { "number": "2", "coachClass": "Standard", "toilet": { "status": "Unknown", "value": "Unknown" } }
+              ] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "std": "10:10",
+      "etd": "On time",
+      "destination": [ { "locationName": "Exeter St Davids", "crs": "EXD" }, { "locationName": "Plymouth", "crs": "PLY" } ],
+      "subsequentCallingPoints": [
+        { "callingPoint": [ { "locationName": "Taunton", "crs": "TAU", "st": "11:10", "et": "On time",
+          "formation": { "coaches": [ { "number": "1", "coachClass": "Standard" } ] } } ] },
+        { "callingPoint": [ { "locationName": "Plymouth", "crs": "PLY", "st": "12:10", "et": "On time" } ] }
+      ]
+    },
+    {
+      "std": "10:15",
+      "etd": "On time",
+      "destination": [ { "locationName": "Reading", "crs": "RDG" } ]
+    },
+    {
+      "std": "10:20",
+      "etd": "On time",
+      "destination": [ { "locationName": "Reading", "crs": "RDG" } ],
+      "formation": { "coaches": [] }
+    }
+  ],
+  "locationName": "Reading",
+  "crs": "RDG"
+}

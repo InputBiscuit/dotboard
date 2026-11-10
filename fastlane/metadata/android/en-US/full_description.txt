@@ -1,0 +1,21 @@
+<p>Dotboard puts a UK station departure board on your home screen, drawn dot by dot like an amber LED platform display.</p>
+
+<p><b>Features</b></p>
+<ul>
+<li>Live departures for any UK station: time, destination, platform and expected time</li>
+<li>"Exp 22:14", "Delayed" and "Cancelled", worded the way real boards show them</li>
+<li>Scrolling calling points, alternating next departures and a ticking clock with seconds</li>
+<li>Several boards on one home screen, each with its own station and an optional "calling at" filter</li>
+<li>Resizable: bigger boards show more trains, and it adapts to both screens of a foldable</li>
+<li>Amber, yellow-green or white LEDs, and a 12- or 24-hour clock</li>
+<li>Battery-friendly: the animation and clock run in your launcher, so the app only wakes up to refresh departures</li>
+<li>Built-in sample boards, so you can try it before you have an API key</li>
+</ul>
+
+<p><b>You need a free API key</b></p>
+<p>Live times come from the free "Live Departure Board" feed on the Rail Data Marketplace (raildata.org.uk). Register there, subscribe to the feed and paste your consumer key into Dotboard. The key is stored encrypted on your phone and only sent to the Rail Data Marketplace.</p>
+
+<p><b>Privacy</b></p>
+<p>No ads, no tracking, no analytics and no Google Play Services. Dotboard only connects to the Rail Data Marketplace to fetch departures.</p>
+
+<p>Dotboard is an independent project and isn't affiliated with any rail company. It's free software under the GNU GPL v3. The Dot Matrix typeface is by Daniel Hart (SIL Open Font License 1.1).</p>

@@ -1,0 +1,37 @@
+# Gradle / build
+.gradle/
+build/
+**/build/
+.kotlin/
+captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+output-metadata.json
+
+# Local config & secrets — never commit
+local.properties
+secrets.properties
+*.keystore
+*.jks
+*.p12
+*.pem
+keystore.properties
+signing.properties
+.env
+*.env
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Logs / misc
+*.log
+.cxx/
+.externalNativeBuild/
+
+# Claude Code worktrees
+.claude/worktrees/

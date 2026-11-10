@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dotboard</string>
+    <string name="widget_name">Departure board</string>
+    <string name="widget_description">Live departures on a dot-matrix board. Tap to refresh.</string>
+</resources>
