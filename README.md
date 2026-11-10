@@ -55,6 +55,15 @@ If the proxy (or the feed) can't be reached, boards keep showing the last depart
 
 ### Using your own API key (optional)
 
+Not needed, but it has benefits:
+
+- **Privacy:** requests go straight to the Rail Data Marketplace, so the proxy never sees your IP address or
+  which stations you check.
+- **Independence:** your boards keep working even if the proxy is down, busy or has hit its daily limit.
+- **Always the latest:** no shared 45-second cache, so tapping a board always fetches brand-new times.
+
+To get one:
+
 1. Register at [raildata.org.uk](https://raildata.org.uk/) and confirm your email address.
 2. Search the data catalogue for **Live Departure Board** and subscribe to it (free). Approval can take up to
    a few working days.

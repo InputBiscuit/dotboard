@@ -13,6 +13,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -45,7 +46,7 @@ object OnboardingStep {
 }
 
 /**
- * First-run guide: what Dotboard is, how to get a free Rail Data Marketplace key, and how to add a board.
+ * First-run guide: what Dotboard is, the optional own-key step (why, and how to get one), and how to add a board.
  * [onFinish] is called when done or skipped (and when going back from the first step).
  */
 @Composable
@@ -90,19 +91,44 @@ fun OnboardingScreen(
                 )
                 Text(
                     "Live times come from the Rail Data Marketplace's Live Departure Board feed and work straight " +
-                        "away, through Dotboard's proxy. If you'd rather use your own free key, you can add one in " +
-                        "Settings at any time.",
+                        "away, with no sign-up.",
                 )
-                Button(onClick = { step = OnboardingStep.WIDGET }, Modifier.fillMaxWidth()) { Text("Next") }
+                Button(onClick = { step = OnboardingStep.API_KEY }, Modifier.fillMaxWidth()) { Text("Next") }
                 TextButton(onClick = ::finish) { Text("Skip") }
             }
 
             OnboardingStep.API_KEY -> {
+                val leave = { if (standaloneGuide) onFinish() else step = OnboardingStep.WIDGET }
+                OptionalBadge()
                 Text(
-                    "Optional: Dotboard works without one. With your own key, requests go straight to the Rail Data " +
-                        "Marketplace instead of through Dotboard's proxy.",
+                    "Dotboard already works without a key: live times come through Dotboard's proxy. You can add " +
+                        "your own free key now, later in Settings, or never.",
                     style = MaterialTheme.typography.bodyLarge,
                 )
+                Text("Why use your own key?", style = MaterialTheme.typography.titleMedium)
+                Benefit(
+                    "Privacy",
+                    "Requests go straight to the Rail Data Marketplace, so Dotboard's proxy never sees your IP address " +
+                        "or which stations you check. (The proxy doesn't log requests either way.)",
+                )
+                Benefit(
+                    "Independence",
+                    "Your boards keep working even if Dotboard's proxy is down, busy or has hit its daily limit.",
+                )
+                Benefit(
+                    "Always the latest",
+                    "The proxy shares each board between users for up to 45 seconds. With your own key, tapping a " +
+                        "board always fetches brand-new times.",
+                )
+                Text(
+                    "Signing up takes a few minutes, and approval can take up to a few working days.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Button(onClick = leave, Modifier.fillMaxWidth()) {
+                    Text(if (standaloneGuide) "Close" else "Continue without a key")
+                }
+
+                Text("Get your own free key", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
                 GuideStep(1, "Go to raildata.org.uk and register for a free account.") {
                     OutlinedButton(onClick = {
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://raildata.org.uk/")))
@@ -129,21 +155,18 @@ fun OnboardingScreen(
                     keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Button(
+                OutlinedButton(
                     onClick = {
                         scope.launch {
                             context.app.apiKeys.set(key)
                             context.app.settings.update { it.copy(useSampleData = false) }
                             WidgetUpdater.updateAll(context, WidgetUpdater.Mode.FORCE)
-                            if (standaloneGuide) onFinish() else step = OnboardingStep.WIDGET
+                            leave()
                         }
                     },
                     enabled = key.isNotBlank(),
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Save key") }
-                TextButton(onClick = { if (standaloneGuide) onFinish() else step = OnboardingStep.WIDGET }) {
-                    Text(if (standaloneGuide) "Close" else "Skip")
-                }
+                ) { Text("Save my key") }
             }
 
             else -> {
@@ -159,6 +182,27 @@ fun OnboardingScreen(
                 Button(onClick = ::finish, Modifier.fillMaxWidth()) { Text("Done") }
             }
         }
+    }
+}
+
+/** A small "OPTIONAL" label, so skimmers see straight away that this step can be skipped. */
+@Composable
+private fun OptionalBadge() {
+    Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = MaterialTheme.shapes.small) {
+        Text(
+            "OPTIONAL",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+        )
+    }
+}
+
+@Composable
+private fun Benefit(title: String, text: String) {
+    Column {
+        Text(title, style = MaterialTheme.typography.titleSmall)
+        Text(text, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

@@ -65,7 +65,7 @@ fun SettingsScreen(onBack: () -> Unit, onKeyGuide: () -> Unit, onAbout: () -> Un
             )
         }
         ApiKeyField(hasKey, onSave = vm::saveApiKey)
-        TextButton(onClick = onKeyGuide) { Text("How to get your own free API key") }
+        TextButton(onClick = onKeyGuide) { Text("Why and how to use your own key") }
 
         SectionTitle("Default station")
         Text(
