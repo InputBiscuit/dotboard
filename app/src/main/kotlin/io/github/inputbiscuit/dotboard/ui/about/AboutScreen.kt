@@ -42,8 +42,13 @@ fun AboutScreen(onBack: () -> Unit) {
         SectionTitle("Data")
         Text("Powered by National Rail Enquiries", style = MaterialTheme.typography.titleMedium)
         Text(
-            "Live departures come from the Live Departure Board feed on the Rail Data Marketplace, " +
-                "using your own API key.",
+            "Live departures come from the Live Departure Board feed on the Rail Data Marketplace.",
+        )
+        Text(
+            "Unless you add your own API key, requests go through Dotboard's proxy (a Cloudflare Worker). It sees " +
+                "which station you ask for and your IP address, uses the IP only briefly to prevent abuse, and keeps " +
+                "no records. With your own key, the app talks to the Rail Data Marketplace directly.",
+            style = MaterialTheme.typography.bodySmall,
         )
         Text(
             "Dotboard is an independent project. It isn't affiliated with or endorsed by National Rail Enquiries, " +

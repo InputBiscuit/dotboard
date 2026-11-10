@@ -32,7 +32,13 @@ import java.time.LocalTime
  * Uses the same renderer as the widget.
  */
 @Composable
-fun BoardPreview(content: BoardContent, theme: LedTheme, use24h: Boolean, modifier: Modifier = Modifier) {
+fun BoardPreview(
+    content: BoardContent,
+    theme: LedTheme,
+    use24h: Boolean,
+    modifier: Modifier = Modifier,
+    updatedAt: LocalTime? = null,
+) {
     BoxWithConstraints(modifier.fillMaxWidth().aspectRatio(BoardGeometry.BASE_COLS / BoardGeometry.BASE_ROWS.toFloat())) {
         val widthPx = with(LocalDensity.current) { maxWidth.roundToPx() }
         val pitch = (widthPx / BoardGeometry.BASE_COLS).coerceAtLeast(2)
@@ -45,6 +51,7 @@ fun BoardPreview(content: BoardContent, theme: LedTheme, use24h: Boolean, modifi
         val pixels = remember(pitch) { IntArray(cols * pitch * rows * pitch) }
         val currentContent by rememberUpdatedState(content)
         val currentUse24h by rememberUpdatedState(use24h)
+        val currentUpdatedAt by rememberUpdatedState(updatedAt)
         var frameCount by remember { mutableIntStateOf(0) }
 
         LaunchedEffect(rasterizer, bitmap) {
@@ -56,7 +63,7 @@ fun BoardPreview(content: BoardContent, theme: LedTheme, use24h: Boolean, modifi
                 val now = System.currentTimeMillis()
                 if (now - lastDraw < FRAME_MILLIS) continue
                 lastDraw = now
-                val frame = BoardFrame(currentContent, LocalTime.now(), currentUse24h, showSeconds = true)
+                val frame = BoardFrame(currentContent, LocalTime.now(), currentUse24h, showSeconds = true, updatedAt = currentUpdatedAt)
                 val plan = renderer.plan(frame, cols, rows)
                 val buffer = renderer.render(plan, Animation.at(now - start, plan))
                 rasterizer.rasterize(buffer, pixels)

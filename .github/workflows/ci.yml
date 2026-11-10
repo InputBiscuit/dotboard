@@ -32,6 +32,10 @@ jobs:
       - name: Unit tests
         run: ./gradlew :core:test :app:testDebugUnitTest
 
+      - name: Proxy tests
+        working-directory: proxy
+        run: npm test  # plain Node test runner; no dependencies needed
+
       # The release build is minified with R8; building it catches shrinking problems early.
       # It's unsigned here (no signing secrets on ordinary pushes).
       - name: Build debug and release APKs

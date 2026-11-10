@@ -35,7 +35,8 @@ fun HomeScreen(actions: List<HomeAction>, vm: HomeViewModel = viewModel()) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             BoardPreview(
-                content = content,
+                content = content.content,
+                updatedAt = content.updatedAt,
                 theme = settings.theme,
                 use24h = settings.use24h,
                 modifier = Modifier.padding(horizontal = 16.dp).clickable(onClick = vm::refresh),

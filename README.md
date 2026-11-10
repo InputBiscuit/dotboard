@@ -17,7 +17,8 @@ with live departures from any station.
 - Battery-friendly: the scrolling text, alternating rows and clock all run in your launcher, so Dotboard only
   wakes up to refresh departures (every 15, 30 or 60 minutes, and to drop a train once it has left). Tap a
   board to refresh it
-- Built-in sample boards, so you can try it before you have an API key
+- Live times straight away: no sign-up or API key needed (or use your own key if you prefer)
+- Built-in sample boards for trying it out
 - No ads, no tracking, no analytics, no Google Play Services. Free and open source (GPL-3.0)
 
 Requires Android 12 or newer.
@@ -39,18 +40,28 @@ phone. You may need to allow installing apps from your browser or file manager.
 
 (Obtainium needs the repository to be public, or a GitHub token added in its settings.)
 
-## Get a free API key
+## Live data and privacy
 
-Dotboard uses the free **Live Departure Board** feed from the [Rail Data Marketplace](https://raildata.org.uk/).
-You need your own key:
+Dotboard uses the **Live Departure Board** feed from the [Rail Data Marketplace](https://raildata.org.uk/).
+
+- **By default** the app fetches boards through Dotboard's proxy, a small Cloudflare Worker (source in
+  [`proxy/`](proxy/)) that holds an API key, so you don't need one. The proxy sees which station (and
+  "calling at" station) you ask for and your IP address. It uses the IP only briefly to rate-limit abuse, caches
+  each board for about 45 seconds so people watching the same station share one request, and keeps no logs.
+- **With your own key** the app talks to the Rail Data Marketplace directly and skips the proxy.
+
+If the proxy (or the feed) can't be reached, boards keep showing the last departures fetched, marked
+"Updated hh:mm".
+
+### Using your own API key (optional)
 
 1. Register at [raildata.org.uk](https://raildata.org.uk/) and confirm your email address.
 2. Search the data catalogue for **Live Departure Board** and subscribe to it (free). Approval can take up to
    a few working days.
 3. Once approved, open your subscription and copy its **Consumer key**.
-4. In Dotboard, open **Settings**, turn off **Use sample data**, paste the key and tap **Save key**.
+4. In Dotboard, open **Settings**, paste the key and tap **Save key**.
 
-The key is stored encrypted on your phone (Android Keystore) and is only sent to `api1.raildata.org.uk`.
+Your key is stored encrypted on your phone (Android Keystore) and is only sent to `api1.raildata.org.uk`.
 
 ## Using it
 
@@ -79,6 +90,8 @@ Actions from a version tag (`.github/workflows/release.yml`).
 - `core/`: pure Kotlin/JVM. Rail Data Marketplace client, departure models, sample data, board cache, and the
   dot-matrix renderer (layout, bitmap fonts, round-dot rasteriser, dot mask). Unit-tested on the JVM.
 - `app/`: the Android app and widget (Compose screens, RemoteViews widget, WorkManager refresh).
+- `proxy/`: the Cloudflare Worker that proxies board requests (`npm test`; deploy with `npx wrangler deploy` and
+  set the key with `npx wrangler secret put RDM_API_KEY`).
 - `tools/fontgen/`: turns the Dot Matrix TTFs into the bitmap fonts in `core/src/main/resources`.
 - `tools/icon/`: generates the app and store icons.
 - `fastlane/metadata/`: store listing for F-Droid.

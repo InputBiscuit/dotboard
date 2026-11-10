@@ -20,6 +20,11 @@ data class BoardFrame(
     val showSeconds: Boolean = true,
     /** False keeps the clock's space (and segment) but leaves the digits for the widget's own TextClock. */
     val drawClock: Boolean = true,
+    /**
+     * When the board is a cached copy because the latest refresh failed, when it was fetched. Shown as
+     * "Updated 22:05" at the left of the clock row.
+     */
+    val updatedAt: LocalTime? = null,
 )
 
 /** Which animation frame to draw. [scrollDots] (smooth scrolling) wins over [page] (paged) for "Calling at". */
@@ -203,6 +208,7 @@ class BoardRenderer(
         val content = PixelBuffer(inner.cols, inner.rows)
         for (line in inner.lines) drawLine(content, inner, line, animation)
         if (inner.frame.drawClock) inner.clockTop?.let { drawClock(content, inner, it) }
+        inner.clockTop?.let { drawUpdated(content, inner, it) }
         if (plan.marginX == 0 && plan.marginY == 0) return content
         val buffer = PixelBuffer(plan.cols, plan.rows)
         for (y in 0 until inner.rows) for (x in 0 until inner.cols) {
@@ -362,6 +368,21 @@ class BoardRenderer(
         tall.draw(buffer, main, x, top)
         // Bottom-align the smaller seconds with the tall digits (which use the descender rows).
         if (seconds.isNotEmpty()) small.draw(buffer, seconds, x + mainW + 1, top + tall.descent)
+    }
+
+    /**
+     * "Updated 22:05" at the left of the clock row, bottom-aligned with the clock's seconds, when showing a cached
+     * board. Shortened to "22:05", or left out, so it never runs into the (centred) clock, which may be the
+     * widget's own TextClock rather than drawn here.
+     */
+    private fun drawUpdated(buffer: PixelBuffer, plan: BoardPlan.Inner, top: Int) {
+        val updated = plan.frame.updatedAt ?: return
+        val f = fonts.regular
+        val time = formatBoardTime("%02d:%02d".format(updated.hour, updated.minute), plan.frame.use24h)
+        val clockWidth = fonts.boldTall.width("00:00") + 1 + fonts.bold.width(":00")
+        val room = (plan.cols - clockWidth) / 2 - 3
+        val text = listOf("Updated $time", time).firstOrNull { f.width(it) <= room } ?: return
+        f.draw(buffer, text, 0, top + fonts.boldTall.descent)
     }
 
     private fun y(line: Int) = line * LINE_PITCH

@@ -256,6 +256,26 @@ class RendererTest {
         assertTrue(drawn.crop(clockSegment.top, clockSegment.height).litCount > 0)
     }
 
+    @Test fun `stale boards say when they were updated, beside the clock`() {
+        val board = sample(FakeScenario.MIXED)
+        val frame = BoardFrame(BoardContent.Departures(board), clock, updatedAt = LocalTime.of(21, 58))
+        val plan = renderer.plan(frame, 256, 64)
+        val rendered = renderer.render(plan)
+        val clockTop = plan.segments.single { it.kind == Segment.Kind.CLOCK }.top
+        assertTrue(hasText(rendered, "Updated 21:58", 0, clockTop + 2))
+
+        // Fresh boards don't show it.
+        val fresh = renderer.render(frame.copy(updatedAt = null), 256, 64)
+        assertFalse(hasText(fresh, "Updated 21:58", 0, clockTop + 2))
+
+        // Narrow boards shorten it to the time, and it never overlaps the centred clock.
+        val narrow = renderer.plan(frame, 150, 64)
+        val narrowTop = narrow.segments.single { it.kind == Segment.Kind.CLOCK }.top
+        val narrowRender = renderer.render(narrow)
+        assertTrue(hasText(narrowRender, "21:58", 0, narrowTop + 2))
+        assertFalse(hasText(narrowRender, "Updated 21:58", 0, narrowTop + 2))
+    }
+
     @Test fun `geometry keeps at least the base grid and grows with the area`() {
         assertEquals(BoardGeometry(256, 64, 4), BoardGeometry.fit(1024, 256))
         val phone4x1 = BoardGeometry.fit(1080, 210)

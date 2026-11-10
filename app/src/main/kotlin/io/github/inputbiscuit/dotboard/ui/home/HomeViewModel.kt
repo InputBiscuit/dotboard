@@ -5,10 +5,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.inputbiscuit.dotboard.app
 import io.github.inputbiscuit.dotboard.core.data.BoardQuery
-import io.github.inputbiscuit.dotboard.core.data.DepartureException
 import io.github.inputbiscuit.dotboard.core.render.BoardContent
-import io.github.inputbiscuit.dotboard.core.render.toBoardMessage
+import io.github.inputbiscuit.dotboard.data.LoadedBoard
 import io.github.inputbiscuit.dotboard.data.Settings
+import io.github.inputbiscuit.dotboard.data.load
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,8 +26,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     val settings: StateFlow<Settings> = app.settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, Settings())
 
-    private val _content = MutableStateFlow<BoardContent>(BoardContent.Message("Loading"))
-    val content: StateFlow<BoardContent> = _content.asStateFlow()
+    private val _content = MutableStateFlow(LoadedBoard(BoardContent.Message("Loading")))
+    val content: StateFlow<LoadedBoard> = _content.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -51,15 +51,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun load(s: Settings, force: Boolean) {
         if (s.defaultCrs.length != 3) {
-            _content.value = BoardContent.Message("No station", "Choose one in settings")
+            _content.value = LoadedBoard(BoardContent.Message("No station", "Choose one in settings"))
             return
         }
         val query = BoardQuery.of(s.defaultCrs, s.defaultFilterCrs)
-        val repo = app.departures()
-        _content.value = try {
-            BoardContent.Departures(repo.cached(query, if (force) 0 else s.refreshMinutes * 60_000L).board)
-        } catch (e: DepartureException) {
-            repo.peek(query)?.let { BoardContent.Departures(it.board) } ?: e.toBoardMessage()
-        }
+        _content.value = app.departures().load(query, if (force) 0 else s.refreshMinutes * 60_000L)
     }
 }

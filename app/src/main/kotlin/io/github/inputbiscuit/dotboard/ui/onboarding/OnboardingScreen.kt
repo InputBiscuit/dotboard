@@ -70,7 +70,7 @@ fun OnboardingScreen(
     DotboardScaffold(
         title = when (step) {
             OnboardingStep.WELCOME -> "Welcome to Dotboard"
-            OnboardingStep.API_KEY -> "Get a free API key"
+            OnboardingStep.API_KEY -> "Use your own API key"
             else -> "Add a board"
         },
         onBack = if (standaloneGuide) onFinish else null,
@@ -89,14 +89,20 @@ fun OnboardingScreen(
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 Text(
-                    "Live times come from the Rail Data Marketplace's free Live Departure Board feed. You'll need your " +
-                        "own key, which takes a few minutes to request. Until then Dotboard shows sample boards.",
+                    "Live times come from the Rail Data Marketplace's Live Departure Board feed and work straight " +
+                        "away, through Dotboard's proxy. If you'd rather use your own free key, you can add one in " +
+                        "Settings at any time.",
                 )
-                Button(onClick = { step = OnboardingStep.API_KEY }, Modifier.fillMaxWidth()) { Text("Next") }
-                TextButton(onClick = ::finish) { Text("Skip and use sample data") }
+                Button(onClick = { step = OnboardingStep.WIDGET }, Modifier.fillMaxWidth()) { Text("Next") }
+                TextButton(onClick = ::finish) { Text("Skip") }
             }
 
             OnboardingStep.API_KEY -> {
+                Text(
+                    "Optional: Dotboard works without one. With your own key, requests go straight to the Rail Data " +
+                        "Marketplace instead of through Dotboard's proxy.",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
                 GuideStep(1, "Go to raildata.org.uk and register for a free account.") {
                     OutlinedButton(onClick = {
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://raildata.org.uk/")))
@@ -107,7 +113,7 @@ fun OnboardingScreen(
                 GuideStep(
                     4,
                     "Subscribe to it and accept the terms. Approval can take up to a few working days; " +
-                        "you can use sample data meanwhile.",
+                        "Dotboard works through its proxy meanwhile.",
                 )
                 GuideStep(5, "Once approved, open your subscription and copy its Consumer key from the details page.")
                 GuideStep(
@@ -134,9 +140,9 @@ fun OnboardingScreen(
                     },
                     enabled = key.isNotBlank(),
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Save key and use live data") }
+                ) { Text("Save key") }
                 TextButton(onClick = { if (standaloneGuide) onFinish() else step = OnboardingStep.WIDGET }) {
-                    Text(if (standaloneGuide) "Close" else "I'll do this later")
+                    Text(if (standaloneGuide) "Close" else "Skip")
                 }
             }
 

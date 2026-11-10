@@ -11,8 +11,11 @@ android {
         applicationId = "io.github.inputbiscuit.dotboard"
         minSdk = 31
         targetSdk = 37
-        versionCode = 3
-        versionName = "0.2.1"
+        versionCode = 4
+        versionName = "0.2.2"
+
+        // Dotboard's API proxy (see proxy/). Used for live data unless the user enters their own key.
+        buildConfigField("String", "PROXY_BASE_URL", "\"https://departures.platform-da5.workers.dev/\"")
     }
 
     // Release signing comes from the environment (CI secrets); without it, release builds are unsigned.
@@ -49,6 +52,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     // F-Droid: don't embed Google's encrypted dependency-info blob in APKs/bundles.

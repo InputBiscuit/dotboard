@@ -1,0 +1,2 @@
+• Live times work straight away: no sign-up or API key needed. Using your own key is still optional in Settings.
+• If departures can't be fetched, boards keep the last ones they had, marked "Updated hh:mm".

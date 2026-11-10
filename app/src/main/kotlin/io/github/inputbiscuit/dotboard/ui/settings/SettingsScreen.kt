@@ -65,7 +65,7 @@ fun SettingsScreen(onBack: () -> Unit, onKeyGuide: () -> Unit, onAbout: () -> Un
             )
         }
         ApiKeyField(hasKey, onSave = vm::saveApiKey)
-        TextButton(onClick = onKeyGuide) { Text("How to get a free API key") }
+        TextButton(onClick = onKeyGuide) { Text("How to get your own free API key") }
 
         SectionTitle("Default station")
         Text(
@@ -124,9 +124,17 @@ private fun ApiKeyField(hasKey: Boolean, onSave: (String) -> Unit) {
         OutlinedTextField(
             value = text,
             onValueChange = { text = it },
-            label = { Text("Rail Data Marketplace API key") },
+            label = { Text("Your own API key (optional)") },
             placeholder = { Text(if (hasKey) "Saved (enter a new one to replace it)" else "Consumer key") },
-            supportingText = { Text(if (hasKey) "A key is saved, encrypted on this device" else "No key saved") },
+            supportingText = {
+                Text(
+                    if (hasKey) {
+                        "Using your key, stored encrypted on this device. Requests go straight to the Rail Data Marketplace."
+                    } else {
+                        "Not needed. Without one, live data comes through Dotboard's proxy."
+                    },
+                )
+            },
             singleLine = true,
             visualTransformation = if (show) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
