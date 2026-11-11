@@ -24,6 +24,7 @@ import io.github.inputbiscuit.dotboard.ui.components.DotboardScaffold
 import io.github.inputbiscuit.dotboard.ui.components.SectionTitle
 
 private const val REPO_URL = "https://github.com/InputBiscuit/dotboard"
+private const val PRIVACY_URL = "https://inputbiscuit.github.io/dotboard/privacy/"
 
 private enum class Licence(val title: String) { GPL("GNU GPL v3"), OFL("SIL Open Font License 1.1"), ODBL("ODbL 1.0") }
 
@@ -50,6 +51,7 @@ fun AboutScreen(onBack: () -> Unit) {
                 "no records. With your own key, the app talks to the Rail Data Marketplace directly.",
             style = MaterialTheme.typography.bodySmall,
         )
+        TextButton(onClick = { context.open(PRIVACY_URL) }) { Text("Privacy policy") }
         Text(
             "Dotboard is an independent project. It isn't affiliated with or endorsed by National Rail Enquiries, " +
                 "Rail Delivery Group or any train operator.",
