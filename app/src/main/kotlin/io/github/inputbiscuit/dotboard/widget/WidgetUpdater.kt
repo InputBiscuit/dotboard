@@ -5,7 +5,6 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.location.Location
 import android.util.Log
 import android.util.SizeF
 import io.github.inputbiscuit.dotboard.app
@@ -16,7 +15,6 @@ import io.github.inputbiscuit.dotboard.core.render.BoardContent
 import io.github.inputbiscuit.dotboard.core.render.BoardFrame
 import io.github.inputbiscuit.dotboard.data.LoadedBoard
 import io.github.inputbiscuit.dotboard.data.load
-import io.github.inputbiscuit.dotboard.location.ApproximateLocation
 import java.time.LocalTime
 
 /** Loads data (through the shared cache) and redraws widgets. */
@@ -52,13 +50,10 @@ object WidgetUpdater {
             Mode.FORCE -> 0L
         }
         var nextDeparture: Long? = null
-        // Looked up at most once per update, and only if a location-following board needs it.
-        val location = lazyLocation(context, enabled = mode == Mode.BACKGROUND || mode == Mode.FORCE)
 
         for (id in ids) {
             // An unconfigured widget (e.g. pinned from the app) shows the default station.
-            var config = app.widgetConfigs.get(id)
-            if (config?.followLocation == true) config = follow(context, id, config, location)
+            val config = app.widgetConfigs.get(id)
             val crs = config?.crs ?: settings.defaultCrs
             val loaded = if (crs.length != 3) {
                 LoadedBoard(BoardContent.Message("Tap to set up"))
@@ -84,34 +79,6 @@ object WidgetUpdater {
 
         // Drop the first train from the board once it has gone, if that's before the next periodic refresh.
         nextDeparture?.takeIf { it < settings.refreshMinutes * 60_000L }?.let { WidgetScheduler.redrawAfter(context, it) }
-    }
-
-    /** The user's approximate location, fetched on first use, or null if disabled or unavailable. */
-    private fun lazyLocation(context: Context, enabled: Boolean): suspend () -> Location? {
-        var fetched = false
-        var location: Location? = null
-        return {
-            if (enabled && !fetched) {
-                fetched = true
-                location = (ApproximateLocation.current(context) as? ApproximateLocation.Result.Found)?.location
-            }
-            location
-        }
-    }
-
-    /**
-     * Moves a location-following board to the nearest station (with a margin, so it doesn't flip between two)
-     * and saves it. Without a location (no permission, location off, no fix) it keeps its current station.
-     */
-    private suspend fun follow(context: Context, id: Int, config: WidgetConfig, location: suspend () -> Location?): WidgetConfig {
-        // Logs say what happened, never where: no coordinates or station names.
-        val here = location() ?: return config.also { Log.i(TAG, "Widget $id: no location available, keeping its station") }
-        val station = context.app.stations.stations().followNearest(here.latitude, here.longitude, config.crs)
-        if (station == null || station.crs == config.crs) {
-            return config.also { Log.i(TAG, "Widget $id: location checked, still the nearest station") }
-        }
-        Log.i(TAG, "Widget $id: location checked, moved to the nearest station")
-        return config.copy(crs = station.crs).also { context.app.widgetConfigs.set(id, it) }
     }
 
     /** Milliseconds until [d] has left (expected time, plus the departed filter's minute of grace), or null. */
@@ -142,9 +109,7 @@ object WidgetUpdater {
     private fun refreshIntent(context: Context, id: Int): PendingIntent = PendingIntent.getBroadcast(
         context,
         id,
-        Intent(context, BoardWidgetProvider::class.java)
-            .setAction(BoardWidgetProvider.ACTION_REFRESH)
-            .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id),
+        Intent(context, RefreshReceiver::class.java).putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
 }
