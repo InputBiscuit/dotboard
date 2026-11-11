@@ -64,7 +64,6 @@ class WidgetConfigActivity : ComponentActivity() {
                 val settings by produceState(Settings()) { value = app.settings.current() }
                 var crs by remember { mutableStateOf("") }
                 var filter by remember { mutableStateOf("") }
-                var follow by remember { mutableStateOf(false) }
                 var loaded by remember { mutableStateOf(false) }
 
                 LaunchedEffect(Unit) {
@@ -72,7 +71,6 @@ class WidgetConfigActivity : ComponentActivity() {
                     val s = app.settings.current()
                     crs = existing?.crs ?: s.defaultCrs
                     filter = existing?.filterCrs ?: s.defaultFilterCrs
-                    follow = existing?.followLocation ?: false
                     loaded = true
                 }
 
@@ -98,21 +96,7 @@ class WidgetConfigActivity : ComponentActivity() {
                     ) {
                         BoardPreview(preview, settings.theme, settings.use24h)
                         if (loaded) {
-                            FollowLocationSection(
-                                stations = stations,
-                                following = follow,
-                                refreshMinutes = settings.refreshMinutes,
-                                onFollow = {
-                                    crs = it
-                                    follow = true
-                                },
-                                onStopFollowing = { follow = false },
-                            )
-                            // Typing or picking a station makes it a fixed board again.
-                            StationField("Station", crs, {
-                                crs = it
-                                follow = false
-                            }, stations)
+                            StationField("Station", crs, { crs = it }, stations)
                             StationField("Calling at", filter, { filter = it }, stations, optional = true)
                         }
                         if (settings.useSampleData) {
@@ -124,7 +108,7 @@ class WidgetConfigActivity : ComponentActivity() {
                         Button(
                             onClick = {
                                 lifecycleScope.launch {
-                                    app.widgetConfigs.set(widgetId, WidgetConfig(crs, filter, followLocation = follow))
+                                    app.widgetConfigs.set(widgetId, WidgetConfig(crs, filter))
                                     WidgetScheduler.ensure(this@WidgetConfigActivity)
                                     WidgetUpdater.update(this@WidgetConfigActivity, intArrayOf(widgetId), WidgetUpdater.Mode.RENDER)
                                     setResult(RESULT_OK, result)

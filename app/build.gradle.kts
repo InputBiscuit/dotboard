@@ -11,8 +11,8 @@ android {
         applicationId = "io.github.inputbiscuit.dotboard"
         minSdk = 31
         targetSdk = 37
-        versionCode = 4
-        versionName = "0.2.2"
+        versionCode = 5
+        versionName = "0.2.2_01"
 
         // Dotboard's API proxy (see proxy/). Used for live data unless the user enters their own key.
         buildConfigField("String", "PROXY_BASE_URL", "\"https://departures.platform-da5.workers.dev/\"")

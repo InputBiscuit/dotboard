@@ -1,0 +1,2 @@
+• "Use my location" and location-following boards have been removed for now, so Dotboard no longer asks for any location permission. Boards that were following you keep their last station.
+• Small internal fixes to tap-to-refresh.

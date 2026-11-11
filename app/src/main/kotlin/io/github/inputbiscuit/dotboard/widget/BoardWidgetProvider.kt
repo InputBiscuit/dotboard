@@ -4,7 +4,6 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import io.github.inputbiscuit.dotboard.app
@@ -15,17 +14,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
 class BoardWidgetProvider : AppWidgetProvider() {
-
-    override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == ACTION_REFRESH) {
-            val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-            if (id != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                goAsyncWork { WidgetUpdater.update(context, intArrayOf(id), WidgetUpdater.Mode.FORCE) }
-            }
-            return
-        }
-        super.onReceive(context, intent)
-    }
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         WidgetScheduler.ensure(context)
@@ -44,10 +32,6 @@ class BoardWidgetProvider : AppWidgetProvider() {
     override fun onEnabled(context: Context) = WidgetScheduler.ensure(context)
 
     override fun onDisabled(context: Context) = WidgetScheduler.cancel(context)
-
-    companion object {
-        const val ACTION_REFRESH = "io.github.inputbiscuit.dotboard.action.REFRESH_WIDGET"
-    }
 }
 
 private val receiverScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)

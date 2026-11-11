@@ -59,7 +59,23 @@ jobs:
           DOTBOARD_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           DOTBOARD_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           DOTBOARD_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease bundleRelease
+
+      - name: Verify and keep the app bundle
+        run: |
+          aab=app/build/outputs/bundle/release/app-release.aab
+          if ! jarsigner -verify "$aab" | grep -q "jar verified"; then
+            echo "::error::The app bundle isn't signed"
+            exit 1
+          fi
+          mkdir -p bundle
+          cp "$aab" "bundle/dotboard-${GITHUB_REF_NAME}.aab"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dotboard-${{ github.ref_name }}-aab
+          path: bundle/
+          retention-days: 30
 
       - name: Verify signature and name the APK
         run: |
