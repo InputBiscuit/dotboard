@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dotboard privacy policy</title>
+<meta name="description" content="What Dotboard, the dot-matrix departure board widget for Android, does with your data.">
+<style>
+  :root {
+    --bg: #fbfaf7;
+    --text: #1d1b18;
+    --muted: #5e5850;
+    --rule: #e4dfd6;
+    --accent: #9a5b00;
+    --panel: #f3efe7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141210;
+      --text: #ece7df;
+      --muted: #a8a095;
+      --rule: #2e2a25;
+      --accent: #ffb23f;
+      --panel: #1d1a17;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 42rem; margin: 0 auto; padding: 3rem 1rem 4rem; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 .25rem; }
+  h2 { font-size: 1.2rem; margin: 2.25rem 0 .5rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); }
+  p, ul { margin: 0 0 1rem; }
+  ul { padding-left: 1.25rem; }
+  li { margin-bottom: .4rem; }
+  a { color: var(--accent); }
+  .meta { color: var(--muted); margin-bottom: 1.5rem; }
+  .summary { background: var(--panel); border-left: 3px solid var(--accent); padding: 1rem 1.25rem; border-radius: 4px; }
+  .summary p:last-child { margin-bottom: 0; }
+  code { font-size: .92em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Dotboard privacy policy</h1>
+  <p class="meta">Last updated 11 November 2026</p>
+
+  <div class="summary">
+    <p><strong>In short:</strong> Dotboard has no accounts, ads, analytics or tracking, and it doesn't access
+    your location. To show departures it sends only the station code you chose. Your settings stay on your
+    phone.</p>
+  </div>
+
+  <p>This policy covers the Dotboard app for Android (package <code>io.github.inputbiscuit.dotboard</code>),
+  however you install it, and the small proxy server it uses to fetch departures. Dotboard is an independent,
+  open-source project; you can read all of its code at
+  <a href="https://github.com/InputBiscuit/dotboard">github.com/InputBiscuit/dotboard</a>.</p>
+
+  <h2>What Dotboard doesn't do</h2>
+  <ul>
+    <li>No accounts or sign-in.</li>
+    <li>No ads, analytics, crash reporting or tracking of any kind, and no third-party SDKs that collect data.</li>
+    <li>No access to your location, contacts, photos, files, camera or microphone.</li>
+    <li>No selling or sharing of personal data.</li>
+  </ul>
+
+  <h2>Fetching departures</h2>
+  <p>To show a board, Dotboard asks for departures from a station. How that request travels depends on your
+  settings.</p>
+  <p><strong>By default, through Dotboard's proxy.</strong> The app sends a request to Dotboard's proxy, a
+  small server run on Cloudflare Workers. The request contains:</p>
+  <ul>
+    <li>the three-letter code of the station you chose (for example <code>PAD</code> for London Paddington), and</li>
+    <li>the code of a "calling at" station, if you set one.</li>
+  </ul>
+  <p>Like any server, the proxy also sees your IP address. It uses the IP address only for a moment, to limit
+  how many requests one device can make so the service can't be abused. The proxy keeps no logs and stores
+  neither your IP address nor your requests. It then asks the Rail Data Marketplace for that station's
+  departures, using Dotboard's own key, and passes the result back. The Rail Data Marketplace sees the request
+  as coming from Cloudflare, not from you.</p>
+  <p>Departure boards are public timetable information. The proxy keeps a copy of each board for about 45
+  seconds, so that people watching the same station share one request. These copies contain no information
+  about you.</p>
+  <p>Cloudflare runs the infrastructure the proxy is hosted on and handles traffic under its own
+  <a href="https://www.cloudflare.com/privacypolicy/">privacy policy</a>.</p>
+
+  <p><strong>With your own API key.</strong> If you enter your own Rail Data Marketplace key in Settings, the
+  app skips the proxy and talks to the Rail Data Marketplace (<code>raildata.org.uk</code>) directly. It sends
+  the station code, the optional "calling at" code and your key. The Rail Data Marketplace also sees your IP
+  address, and handles it under its own terms, which you accepted when you signed up for the key.</p>
+
+  <p><strong>Sample data.</strong> With "Use sample data" turned on, the app shows built-in sample boards and
+  doesn't connect to anything.</p>
+
+  <p>All connections use HTTPS, so they're encrypted in transit.</p>
+
+  <h2>What's stored on your phone</h2>
+  <ul>
+    <li>Your settings: default station, board colours, clock format, refresh interval and sample-data choice.</li>
+    <li>Each widget's station and optional "calling at" station.</li>
+    <li>Your own API key, if you entered one, encrypted with a key held in Android's secure keystore. It's
+      never logged and only ever sent to the Rail Data Marketplace.</li>
+    <li>Recently fetched departure boards, so a widget can keep showing the last board when there's no
+      connection.</li>
+  </ul>
+  <p>None of this leaves your phone, and Dotboard turns off Android's cloud backup, so it isn't copied to your
+  Google account either. Uninstalling Dotboard, or clearing its storage in Android's settings, deletes all of
+  it.</p>
+
+  <h2>Links</h2>
+  <p>A few buttons in the app open web pages in your browser, such as the Rail Data Marketplace's sign-up page
+  and Dotboard's source code on GitHub. Those websites have their own privacy policies.</p>
+
+  <h2>App stores</h2>
+  <p>If you install Dotboard from Google Play or another store, that store handles your download and any
+  information it collects under its own privacy policy. Dotboard receives nothing about you from it.</p>
+
+  <h2>Children</h2>
+  <p>Dotboard isn't aimed at children and doesn't knowingly collect any information from anyone, including
+  children.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If Dotboard's handling of data changes, this page will be updated before the new version is released,
+  and the date at the top will change. The page's full history is public in the
+  <a href="https://github.com/InputBiscuit/dotboard/commits/main/docs/privacy/index.html">project's
+  repository</a>.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about privacy? Open an issue at
+  <a href="https://github.com/InputBiscuit/dotboard/issues">github.com/InputBiscuit/dotboard/issues</a>.</p>
+</main>
+</body>
+</html>
