@@ -53,23 +53,25 @@ jobs:
           done
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
 
-      - name: Build signed release APK
+      # The APK (GitHub flavor, with location) goes on the GitHub Release; the bundle (Play flavor, no
+      # location) is kept as a workflow artifact for uploading to Google Play.
+      - name: Build signed release APK and app bundle
         env:
           DOTBOARD_KEYSTORE_PATH: ${{ runner.temp }}/release.jks
           DOTBOARD_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           DOTBOARD_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           DOTBOARD_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease bundleRelease
+        run: ./gradlew assembleGithubRelease bundlePlayRelease
 
       - name: Verify and keep the app bundle
         run: |
-          aab=app/build/outputs/bundle/release/app-release.aab
+          aab=app/build/outputs/bundle/playRelease/app-play-release.aab
           if ! jarsigner -verify "$aab" | grep -q "jar verified"; then
             echo "::error::The app bundle isn't signed"
             exit 1
           fi
           mkdir -p bundle
-          cp "$aab" "bundle/dotboard-${GITHUB_REF_NAME}.aab"
+          cp "$aab" "bundle/dotboard-${GITHUB_REF_NAME}-play.aab"
 
       - uses: actions/upload-artifact@v7
         with:
@@ -79,10 +81,10 @@ jobs:
 
       - name: Verify signature and name the APK
         run: |
-          apk=app/build/outputs/apk/release/app-release.apk
+          apk=app/build/outputs/apk/github/release/app-github-release.apk
           if [ ! -f "$apk" ]; then
             echo "::error::No signed APK was produced (is the keystore/alias right?)"
-            ls -la app/build/outputs/apk/release/
+            ls -la app/build/outputs/apk/github/release/
             exit 1
           fi
           apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)

@@ -18,6 +18,8 @@ with live departures from any station.
   wakes up to refresh departures (every 15, 30 or 60 minutes, and to drop a train once it has left). Tap a
   board to refresh it
 - Live times straight away: no sign-up or API key needed (or use your own key if you prefer)
+- Use my location: find your nearest station, or have a board follow you (optional; not in the Google Play
+  version)
 - Built-in sample boards for trying it out
 - No ads, no tracking, no analytics, no Google Play Services. Free and open source (GPL-3.0)
 
@@ -86,12 +88,15 @@ Requirements: JDK 17 or newer and the Android SDK (platform 37, build-tools 37).
 
 ```sh
 echo "sdk.dir=/path/to/Android/sdk" > local.properties   # not committed
-./gradlew assembleDebug    # app/build/outputs/apk/debug/
-./gradlew :core:test       # unit tests (pure Kotlin: API client, renderer, data)
+./gradlew assembleGithubDebug    # app/build/outputs/apk/github/debug/
+./gradlew :core:test             # unit tests (pure Kotlin: API client, renderer, data)
 ```
 
-`./gradlew assembleRelease` builds an unsigned, minified release APK. Signed releases are built by GitHub
-Actions from a version tag (`.github/workflows/release.yml`).
+There are two flavors. `github` (GitHub Releases and F-Droid) includes the optional location features;
+`play` (Google Play) leaves them out, along with the location permissions. `./gradlew assembleGithubRelease`
+builds an unsigned, minified release APK. Signed releases are built by GitHub Actions from a version tag
+(`.github/workflows/release.yml`): the `github` APK goes on the release, and a `play` app bundle is kept as a
+workflow artifact.
 
 ### Project layout
 

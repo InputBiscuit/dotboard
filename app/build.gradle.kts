@@ -11,8 +11,8 @@ android {
         applicationId = "io.github.inputbiscuit.dotboard"
         minSdk = 31
         targetSdk = 37
-        versionCode = 5
-        versionName = "0.2.2_01"
+        versionCode = 6
+        versionName = "0.2.3"
 
         // Dotboard's API proxy (see proxy/). Used for live data unless the user enters their own key.
         buildConfigField("String", "PROXY_BASE_URL", "\"https://departures.platform-da5.workers.dev/\"")
@@ -42,6 +42,21 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+        }
+    }
+
+    // "github" (GitHub releases and F-Droid) has the optional location features; "play" (Google Play)
+    // leaves them out, along with the location permissions (see src/github/AndroidManifest.xml).
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("github") {
+            dimension = "distribution"
+            isDefault = true
+            buildConfigField("boolean", "LOCATION", "true")
+        }
+        create("play") {
+            dimension = "distribution"
+            buildConfigField("boolean", "LOCATION", "false")
         }
     }
 
