@@ -42,6 +42,7 @@ import io.github.inputbiscuit.dotboard.core.render.toBoardMessage
 import io.github.inputbiscuit.dotboard.core.stations.StationList
 import io.github.inputbiscuit.dotboard.data.Settings
 import io.github.inputbiscuit.dotboard.data.platformBoard
+import io.github.inputbiscuit.dotboard.location.LocationFeatures
 import io.github.inputbiscuit.dotboard.ui.components.StationField
 import io.github.inputbiscuit.dotboard.ui.home.BoardPreview
 import io.github.inputbiscuit.dotboard.ui.theme.DotboardTheme
@@ -122,7 +123,7 @@ class WidgetConfigActivity : ComponentActivity() {
                         BoardPreview(preview, settings.theme, settings.use24h, callingPointTimes = showTimes)
                         if (loaded) {
                             if (BuildConfig.LOCATION) {
-                                FollowLocationSection(
+                                LocationFeatures.FollowSection(
                                     stations = stations,
                                     following = follow,
                                     refreshMinutes = settings.refreshMinutes,
