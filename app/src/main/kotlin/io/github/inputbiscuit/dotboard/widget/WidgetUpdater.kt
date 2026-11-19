@@ -12,11 +12,11 @@ import io.github.inputbiscuit.dotboard.app
 import io.github.inputbiscuit.dotboard.core.data.BoardQuery
 import io.github.inputbiscuit.dotboard.core.model.Departure
 import io.github.inputbiscuit.dotboard.core.model.DepartureStatus
-import io.github.inputbiscuit.dotboard.core.model.onPlatforms
 import io.github.inputbiscuit.dotboard.core.render.BoardContent
 import io.github.inputbiscuit.dotboard.core.render.BoardFrame
 import io.github.inputbiscuit.dotboard.data.LoadedBoard
 import io.github.inputbiscuit.dotboard.data.load
+import io.github.inputbiscuit.dotboard.data.platformBoard
 import io.github.inputbiscuit.dotboard.location.ApproximateLocation
 import java.time.LocalTime
 
@@ -72,7 +72,7 @@ object WidgetUpdater {
             val content = when (val c = loaded.content) {
                 is BoardContent.Departures -> {
                     if (!settings.useSampleData) app.platforms.record(c.board)
-                    BoardContent.Departures(c.board.onPlatforms(platforms, config?.keepNoPlatform ?: false))
+                    platformBoard(c.board, platforms, config?.keepNoPlatform ?: false)
                 }
                 else -> c
             }

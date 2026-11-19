@@ -36,12 +36,12 @@ import io.github.inputbiscuit.dotboard.BuildConfig
 import io.github.inputbiscuit.dotboard.app
 import io.github.inputbiscuit.dotboard.core.data.BoardQuery
 import io.github.inputbiscuit.dotboard.core.data.DepartureException
-import io.github.inputbiscuit.dotboard.core.model.onPlatforms
 import io.github.inputbiscuit.dotboard.core.model.platforms
 import io.github.inputbiscuit.dotboard.core.render.BoardContent
 import io.github.inputbiscuit.dotboard.core.render.toBoardMessage
 import io.github.inputbiscuit.dotboard.core.stations.StationList
 import io.github.inputbiscuit.dotboard.data.Settings
+import io.github.inputbiscuit.dotboard.data.platformBoard
 import io.github.inputbiscuit.dotboard.ui.components.StationField
 import io.github.inputbiscuit.dotboard.ui.home.BoardPreview
 import io.github.inputbiscuit.dotboard.ui.theme.DotboardTheme
@@ -107,7 +107,7 @@ class WidgetConfigActivity : ComponentActivity() {
                         val board = app.departures().cached(query, 60_000).board
                         previewPlatforms = board.platforms()
                         if (!app.settings.current().useSampleData) app.platforms.record(board)
-                        BoardContent.Departures(board.onPlatforms(platforms, keepNoPlatform))
+                        platformBoard(board, platforms, keepNoPlatform)
                     } catch (e: DepartureException) {
                         e.toBoardMessage()
                     }
