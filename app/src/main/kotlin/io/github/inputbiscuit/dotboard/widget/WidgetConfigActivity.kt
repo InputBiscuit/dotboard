@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import io.github.inputbiscuit.dotboard.BuildConfig
 import io.github.inputbiscuit.dotboard.app
 import io.github.inputbiscuit.dotboard.core.data.BoardQuery
 import io.github.inputbiscuit.dotboard.core.data.DepartureException
@@ -64,6 +65,7 @@ class WidgetConfigActivity : ComponentActivity() {
                 val settings by produceState(Settings()) { value = app.settings.current() }
                 var crs by remember { mutableStateOf("") }
                 var filter by remember { mutableStateOf("") }
+                var follow by remember { mutableStateOf(false) }
                 var loaded by remember { mutableStateOf(false) }
 
                 LaunchedEffect(Unit) {
@@ -71,6 +73,7 @@ class WidgetConfigActivity : ComponentActivity() {
                     val s = app.settings.current()
                     crs = existing?.crs ?: s.defaultCrs
                     filter = existing?.filterCrs ?: s.defaultFilterCrs
+                    follow = existing?.followLocation ?: false
                     loaded = true
                 }
 
@@ -96,7 +99,23 @@ class WidgetConfigActivity : ComponentActivity() {
                     ) {
                         BoardPreview(preview, settings.theme, settings.use24h)
                         if (loaded) {
-                            StationField("Station", crs, { crs = it }, stations)
+                            if (BuildConfig.LOCATION) {
+                                FollowLocationSection(
+                                    stations = stations,
+                                    following = follow,
+                                    refreshMinutes = settings.refreshMinutes,
+                                    onFollow = {
+                                        crs = it
+                                        follow = true
+                                    },
+                                    onStopFollowing = { follow = false },
+                                )
+                            }
+                            // Typing or picking a station makes it a fixed board again.
+                            StationField("Station", crs, {
+                                crs = it
+                                follow = false
+                            }, stations)
                             StationField("Calling at", filter, { filter = it }, stations, optional = true)
                         }
                         if (settings.useSampleData) {
@@ -108,7 +127,7 @@ class WidgetConfigActivity : ComponentActivity() {
                         Button(
                             onClick = {
                                 lifecycleScope.launch {
-                                    app.widgetConfigs.set(widgetId, WidgetConfig(crs, filter))
+                                    app.widgetConfigs.set(widgetId, WidgetConfig(crs, filter, followLocation = follow))
                                     WidgetScheduler.ensure(this@WidgetConfigActivity)
                                     WidgetUpdater.update(this@WidgetConfigActivity, intArrayOf(widgetId), WidgetUpdater.Mode.RENDER)
                                     setResult(RESULT_OK, result)

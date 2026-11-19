@@ -34,10 +34,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.inputbiscuit.dotboard.BuildConfig
 import io.github.inputbiscuit.dotboard.core.data.FakeScenario
 import io.github.inputbiscuit.dotboard.core.render.LedTheme
 import io.github.inputbiscuit.dotboard.data.Settings
 import io.github.inputbiscuit.dotboard.ui.components.DotboardScaffold
+import io.github.inputbiscuit.dotboard.ui.components.NearestStationPicker
 import io.github.inputbiscuit.dotboard.ui.components.SectionTitle
 import io.github.inputbiscuit.dotboard.ui.components.StationField
 
@@ -71,6 +73,9 @@ fun SettingsScreen(onBack: () -> Unit, onKeyGuide: () -> Unit, onAbout: () -> Un
             "Used by the preview, and by boards added from the app until you set them up (long-press a board).",
             style = MaterialTheme.typography.bodySmall,
         )
+        if (BuildConfig.LOCATION) {
+            NearestStationPicker(stations, onPick = { crs -> vm.update { it.copy(defaultCrs = crs) } })
+        }
         StationField("Station", settings.defaultCrs, { crs -> vm.update { it.copy(defaultCrs = crs) } }, stations)
         StationField(
             "Calling at",

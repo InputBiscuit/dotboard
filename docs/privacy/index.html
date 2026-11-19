@@ -47,11 +47,11 @@
 <body>
 <main>
   <h1>Dotboard privacy policy</h1>
-  <p class="meta">Last updated 11 November 2026</p>
+  <p class="meta">Last updated 19 November 2026</p>
 
   <div class="summary">
-    <p><strong>In short:</strong> Dotboard has no accounts, ads, analytics or tracking, and it doesn't access
-    your location. To show departures it sends only the station code you chose. Your settings stay on your
+    <p><strong>In short:</strong> Dotboard has no accounts, ads, analytics or tracking, and your location never
+    leaves your phone. To show departures it sends only the station code you chose. Your settings stay on your
     phone.</p>
   </div>
 
@@ -64,9 +64,19 @@
   <ul>
     <li>No accounts or sign-in.</li>
     <li>No ads, analytics, crash reporting or tracking of any kind, and no third-party SDKs that collect data.</li>
-    <li>No access to your location, contacts, photos, files, camera or microphone.</li>
+    <li>No access to your contacts, photos, files, camera or microphone.</li>
     <li>No selling or sharing of personal data.</li>
   </ul>
+
+  <h2>Location</h2>
+  <p>The Google Play version of Dotboard doesn't access your location at all.</p>
+  <p>The version from GitHub Releases or F-Droid has an optional "Use my location" button. Only if you tap
+  it, Dotboard asks for approximate location and uses Android's own location service (not Google Play
+  Services) to find the nearest stations in the station list built into the app. A board can also follow
+  you: with "Allow all the time", it rechecks your approximate location when it refreshes and switches to
+  the nearest station. Your location is never stored, logged or sent anywhere; only the station code it
+  picks is used to fetch departures, as below. You can turn location off for Dotboard at any time in
+  Android's settings.</p>
 
   <h2>Fetching departures</h2>
   <p>To show a board, Dotboard asks for departures from a station. How that request travels depends on your

@@ -30,7 +30,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
 
       - name: Unit tests
-        run: ./gradlew :core:test :app:testDebugUnitTest
+        run: ./gradlew :core:test :app:testGithubDebugUnitTest
 
       - name: Proxy tests
         working-directory: proxy
@@ -38,7 +38,7 @@ jobs:
 
       # The release build is minified with R8; building it catches shrinking problems early.
       # It's unsigned here (no signing secrets on ordinary pushes).
-      - name: Build debug and release APKs
+      - name: Build debug and release APKs (both flavors)
         run: ./gradlew assembleDebug assembleRelease
 
       - name: Upload test reports on failure
@@ -52,5 +52,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: dotboard-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/*/debug/*.apk
           retention-days: 14
