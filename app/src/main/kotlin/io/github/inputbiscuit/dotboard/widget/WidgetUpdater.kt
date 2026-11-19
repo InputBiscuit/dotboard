@@ -16,6 +16,7 @@ import io.github.inputbiscuit.dotboard.core.render.BoardContent
 import io.github.inputbiscuit.dotboard.core.render.BoardFrame
 import io.github.inputbiscuit.dotboard.data.LoadedBoard
 import io.github.inputbiscuit.dotboard.data.load
+import io.github.inputbiscuit.dotboard.data.platformBoard
 import io.github.inputbiscuit.dotboard.location.ApproximateLocation
 import java.time.LocalTime
 
@@ -60,14 +61,30 @@ object WidgetUpdater {
             var config = app.widgetConfigs.get(id)
             if (config?.followLocation == true) config = follow(context, id, config, location)
             val crs = config?.crs ?: settings.defaultCrs
+            val platforms = config?.platforms.orEmpty()
             val loaded = if (crs.length != 3) {
                 LoadedBoard(BoardContent.Message("Tap to set up"))
             } else {
-                repo.load(BoardQuery.of(crs, config?.filterCrs ?: settings.defaultFilterCrs), maxAge)
+                // A platform-filtered board asks for more services, so one platform still has a few trains.
+                val rows = if (platforms.isEmpty()) BoardQuery.ROWS else BoardQuery.FILTERED_ROWS
+                repo.load(BoardQuery.of(crs, config?.filterCrs ?: settings.defaultFilterCrs, rows), maxAge)
             }
-            val content = loaded.content
+            val content = when (val c = loaded.content) {
+                is BoardContent.Departures -> {
+                    if (!settings.useSampleData) app.platforms.record(c.board)
+                    platformBoard(c.board, platforms, config?.keepNoPlatform ?: false)
+                }
+                else -> c
+            }
             // The launcher ticks the clock (TextClock), so the board leaves the digits out.
-            val frame = BoardFrame(content, LocalTime.now(), settings.use24h, drawClock = false, updatedAt = loaded.updatedAt)
+            val frame = BoardFrame(
+                content,
+                LocalTime.now(),
+                settings.use24h,
+                drawClock = false,
+                updatedAt = loaded.updatedAt,
+                callingPointTimes = config?.callingPointTimes ?: settings.showCallingPointTimes,
+            )
             (content as? BoardContent.Departures)?.board?.departures?.firstOrNull()?.let { first ->
                 millisUntilDeparted(first)?.let { nextDeparture = minOf(nextDeparture ?: it, it) }
             }
@@ -111,7 +128,8 @@ object WidgetUpdater {
             return config.also { Log.i(TAG, "Widget $id: location checked, still the nearest station") }
         }
         Log.i(TAG, "Widget $id: location checked, moved to the nearest station")
-        return config.copy(crs = station.crs).also { context.app.widgetConfigs.set(id, it) }
+        // Platforms belong to a station, so a board that moves shows all of the new station's platforms.
+        return config.copy(crs = station.crs, platforms = emptySet()).also { context.app.widgetConfigs.set(id, it) }
     }
 
     /** Milliseconds until [d] has left (expected time, plus the departed filter's minute of grace), or null. */

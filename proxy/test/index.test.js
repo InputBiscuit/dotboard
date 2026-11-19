@@ -34,6 +34,19 @@ test("passes the calling-at filter through", async () => {
   assert.equal(upstream.searchParams.get("filterType"), "to");
 });
 
+test("bigger boards for platform filtering and platform discovery", async () => {
+  await get("/v1/board/RDG?rows=50");
+  let upstream = new URL(calls[0].url);
+  assert.equal(upstream.searchParams.get("numRows"), "50");
+  assert.equal(upstream.searchParams.get("timeWindow"), null);
+
+  await get("/v1/board/RDG?filter=PAD&rows=150");
+  upstream = new URL(calls[1].url);
+  assert.equal(upstream.searchParams.get("numRows"), "150");
+  assert.equal(upstream.searchParams.get("timeWindow"), "120");
+  assert.equal(upstream.searchParams.get("filterCrs"), "PAD");
+});
+
 test("never returns the key to the client", async () => {
   const res = await get("/v1/board/PAD");
   assert.ok(!(await res.text()).includes("test-key"));
@@ -42,7 +55,9 @@ test("never returns the key to the client", async () => {
 
 test("rejects non-canonical requests without calling upstream", async () => {
   for (const path of ["/v1/board/pad", "/v1/board/PADD", "/v1/board/PAD?filter=rdg", "/v1/board/PAD?x=1",
-    "/v1/board/PAD?filter=RDG&filter=SLO", "/other"]) {
+    "/v1/board/PAD?filter=RDG&filter=SLO", "/v1/board/PAD?rows=10", "/v1/board/PAD?rows=20",
+    "/v1/board/PAD?rows=50&filter=RDG", "/v1/board/PAD?rows=50&rows=150", "/v1/board/PAD?rows=constructor",
+    "/other"]) {
     const res = await get(path);
     assert.ok(res.status === 400 || res.status === 404, `${path} → ${res.status}`);
     assert.equal(res.headers.get("Cache-Control"), "no-store");

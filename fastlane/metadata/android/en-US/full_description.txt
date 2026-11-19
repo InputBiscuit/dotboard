@@ -9,6 +9,7 @@
 <li>Resizable: bigger boards show more trains, and it adapts to both screens of a foldable</li>
 <li>Amber, yellow-green or white LEDs, and a 12- or 24-hour clock</li>
 <li>Battery-friendly: the animation and clock run in your launcher, so the app only wakes up to refresh departures</li>
+<li>Optional platform filter, and optional times at each calling point</li>
 <li>Works straight away: no sign-up or API key needed</li>
 <li>Use my location: find your nearest station, or have a board follow you</li>
 </ul>

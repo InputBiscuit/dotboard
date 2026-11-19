@@ -24,6 +24,8 @@ data class Settings(
     /** How often boards refresh in the background (WorkManager, so 15 minutes at least). */
     val refreshMinutes: Int = 15,
     val use24h: Boolean = true,
+    /** Times at each stop in "Calling at" (boards can override it in their own setup). */
+    val showCallingPointTimes: Boolean = false,
     val onboardingDone: Boolean = false,
 ) {
     companion object {
@@ -48,6 +50,7 @@ class SettingsRepository(private val context: Context) {
             prefs[THEME] = s.theme.name
             prefs[REFRESH_MINUTES] = s.refreshMinutes
             prefs[USE_24H] = s.use24h
+            prefs[CALLING_POINT_TIMES] = s.showCallingPointTimes
             prefs[ONBOARDING_DONE] = s.onboardingDone
         }
     }
@@ -61,6 +64,7 @@ class SettingsRepository(private val context: Context) {
         // Earlier builds offered 1-10 minute screen-on refreshes; anything not offered now becomes 15.
         refreshMinutes = this[REFRESH_MINUTES]?.takeIf { it in Settings.REFRESH_CHOICES } ?: 15,
         use24h = this[USE_24H] ?: true,
+        showCallingPointTimes = this[CALLING_POINT_TIMES] ?: false,
         onboardingDone = this[ONBOARDING_DONE] ?: false,
     )
 
@@ -75,6 +79,7 @@ class SettingsRepository(private val context: Context) {
         val THEME = stringPreferencesKey("theme")
         val REFRESH_MINUTES = intPreferencesKey("refresh_minutes")
         val USE_24H = booleanPreferencesKey("use_24h")
+        val CALLING_POINT_TIMES = booleanPreferencesKey("show_calling_point_times")
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
     }
 }

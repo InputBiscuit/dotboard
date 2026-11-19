@@ -49,7 +49,10 @@ data class CallingAt(
     val crs: String?,
     val scheduled: String?,
     val status: DepartureStatus,
-)
+) {
+    /** When the train is due here: the expected time if it's running late, otherwise the timetabled one. */
+    val time: String? get() = (status as? DepartureStatus.Expected)?.time ?: scheduled?.takeIf { it.isNotBlank() }
+}
 
 @Serializable
 data class Departure(
@@ -104,6 +107,46 @@ fun Board.withoutDeparted(now: LocalTime, graceMinutes: Int = 1): Board {
         ahead <= 12 * 60 || behind <= graceMinutes
     }
     return if (upcoming.size == departures.size) this else copy(departures = upcoming)
+}
+
+/**
+ * Only services from [platforms] (all of them when it's empty). A plain number also matches its lettered parts, so
+ * "11" keeps "11A" and "11B" (but not "110"); "11A" matches only itself. Services with no platform yet are kept only
+ * if [keepUnknown]: at big stations the platform is often shown just before departure.
+ */
+fun Board.onPlatforms(platforms: Set<String>, keepUnknown: Boolean): Board {
+    if (platforms.isEmpty()) return this
+    val wanted = platforms.mapTo(HashSet()) { it.trim().uppercase() }
+    val kept = departures.filter { d ->
+        val p = d.platform?.trim()?.uppercase()
+        if (p.isNullOrEmpty()) keepUnknown else p in wanted || PLATFORM_PART.find(p)?.groupValues?.get(1) in wanted
+    }
+    return if (kept.size == departures.size) this else copy(departures = kept)
+}
+
+/** A lettered part of a numbered platform: "11A" → "11". */
+private val PLATFORM_PART = Regex("""^(\d+)[A-Z]+$""")
+
+/** Every platform on the board, in [PlatformOrder]. */
+fun Board.platforms(): List<String> =
+    departures.mapNotNull { it.platform?.trim()?.uppercase()?.takeIf(String::isNotEmpty) }.distinct().sortedWith(PlatformOrder)
+
+/**
+ * Platforms in the order a station numbers them: "1, 2, … 10, 10A, 11", then any without a number ("A", "B").
+ */
+object PlatformOrder : Comparator<String> {
+    private val NUMBERED = Regex("""^(\d+)(.*)$""")
+
+    override fun compare(a: String, b: String): Int {
+        val ma = NUMBERED.find(a)
+        val mb = NUMBERED.find(b)
+        return when {
+            ma != null && mb != null -> compareValuesBy(ma, mb, { it.groupValues[1].toBigInteger() }, { it.groupValues[2] })
+            ma != null -> -1
+            mb != null -> 1
+            else -> a.compareTo(b)
+        }
+    }
 }
 
 fun ServiceItem.toDeparture(): Departure = Departure(

@@ -70,6 +70,7 @@ fun AboutScreen(onBack: () -> Unit) {
             "Station names and codes from uk-railway-stations by David Wheatley, derived from Trainline EU's " +
                 "stations dataset and its sources. Licensed under the Open Database License 1.0.",
         )
+        Text("Platform lists © OpenStreetMap contributors, licensed under the Open Database License 1.0.")
         TextButton(onClick = { showing = Licence.ODBL }) { Text("Read the ODbL") }
     }
 

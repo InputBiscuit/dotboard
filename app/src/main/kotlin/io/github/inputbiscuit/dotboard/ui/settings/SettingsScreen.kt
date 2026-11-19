@@ -99,6 +99,12 @@ fun SettingsScreen(onBack: () -> Unit, onKeyGuide: () -> Unit, onAbout: () -> Un
             checked = settings.use24h,
             onChange = { on -> vm.update { it.copy(use24h = on) } },
         )
+        SwitchRow(
+            title = "Times at calling points",
+            subtitle = "\"Calling at: Slough (10:42), Reading (11:02)\". Each board can change this in its own setup.",
+            checked = settings.showCallingPointTimes,
+            onChange = { on -> vm.update { it.copy(showCallingPointTimes = on) } },
+        )
 
         SectionTitle("Widget")
         Text("Refresh departures", style = MaterialTheme.typography.bodyLarge)

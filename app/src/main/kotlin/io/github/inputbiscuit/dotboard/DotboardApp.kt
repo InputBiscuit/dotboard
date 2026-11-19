@@ -10,6 +10,7 @@ import io.github.inputbiscuit.dotboard.core.data.InMemoryBoardStore
 import io.github.inputbiscuit.dotboard.core.data.LdbwsDepartureRepository
 import io.github.inputbiscuit.dotboard.core.data.ProxyDepartureRepository
 import io.github.inputbiscuit.dotboard.data.ApiKeyStore
+import io.github.inputbiscuit.dotboard.data.PlatformStore
 import io.github.inputbiscuit.dotboard.data.SettingsRepository
 import io.github.inputbiscuit.dotboard.data.StationRepository
 import io.github.inputbiscuit.dotboard.widget.WidgetConfigStore
@@ -24,6 +25,7 @@ class DotboardApp : Application() {
     val apiKeys by lazy { ApiKeyStore(this) }
     val stations by lazy { StationRepository(this) }
     val widgetConfigs by lazy { WidgetConfigStore(this) }
+    val platforms by lazy { PlatformStore(this) }
 
     override fun onCreate() {
         super.onCreate()

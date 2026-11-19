@@ -3,6 +3,9 @@ package io.github.inputbiscuit.dotboard.data
 import io.github.inputbiscuit.dotboard.core.data.BoardQuery
 import io.github.inputbiscuit.dotboard.core.data.CachingDepartureRepository
 import io.github.inputbiscuit.dotboard.core.data.DepartureException
+import io.github.inputbiscuit.dotboard.core.model.Board
+import io.github.inputbiscuit.dotboard.core.model.PlatformOrder
+import io.github.inputbiscuit.dotboard.core.model.onPlatforms
 import io.github.inputbiscuit.dotboard.core.model.withoutDeparted
 import io.github.inputbiscuit.dotboard.core.render.BoardContent
 import io.github.inputbiscuit.dotboard.core.render.toBoardMessage
@@ -15,6 +18,18 @@ import java.time.ZoneId
  * proxy is unreachable), when that board was fetched.
  */
 data class LoadedBoard(val content: BoardContent, val updatedAt: LocalTime? = null)
+
+/**
+ * [board] filtered to [platforms]. If that leaves nothing although the station has trains, it says so, as big
+ * stations (e.g. London termini) often show a platform only shortly before the train leaves.
+ */
+fun platformBoard(board: Board, platforms: Set<String>, keepUnknown: Boolean): BoardContent {
+    val filtered = board.onPlatforms(platforms, keepUnknown)
+    if (filtered.departures.isNotEmpty() || board.departures.isEmpty()) return BoardContent.Departures(filtered)
+    val which = platforms.sortedWith(PlatformOrder).joinToString(", ")
+    val label = if (platforms.size == 1) "Platform $which" else "Platforms $which"
+    return BoardContent.Message("No trains yet", "$label: platforms are often shown just before departure.")
+}
 
 /**
  * Fetches a board no older than [maxAgeMillis]. If that fails, shows the last board fetched for the query (minus

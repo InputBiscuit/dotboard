@@ -12,7 +12,9 @@ with live departures from any station.
 - Live departures: time, destination, platform, and "Exp 22:14", "Delayed" or "Cancelled", the way real
   boards show them
 - Scrolling calling points, alternating next trains and a ticking clock with seconds
-- Several boards on one home screen, each with its own station and an optional "calling at" filter
+- Several boards on one home screen, each with its own station and optional "calling at" and platform
+  filters
+- Optional times at each calling point: "Calling at: Slough (10:42), Maidenhead (10:49) and Reading (11:02)"
 - Resizable: bigger boards show more trains, and it adapts to both screens of a foldable
 - Battery-friendly: the scrolling text, alternating rows and clock all run in your launcher, so Dotboard only
   wakes up to refresh departures (every 15, 30 or 60 minutes, and to drop a train once it has left). Tap a
@@ -107,6 +109,7 @@ workflow artifact.
   set the key with `npx wrangler secret put RDM_API_KEY`).
 - `tools/fontgen/`: turns the Dot Matrix TTFs into the bitmap fonts in `core/src/main/resources`.
 - `tools/icon/`: generates the app and store icons.
+- `tools/platforms/`: builds the bundled platform lists from OpenStreetMap.
 - `fastlane/metadata/`: store listing for F-Droid.
 
 ## Credits
@@ -121,6 +124,10 @@ workflow artifact.
   [Open Database License (ODbL) 1.0](licenses/stations-ODbL-1.0.txt).
   Dotboard's modified copy (trimmed to CRS code and name) is at
   [`app/src/main/assets/stations.csv`](app/src/main/assets/stations.csv) and is also licensed under ODbL 1.0.
+- Platform lists: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), licensed under the
+  [Open Database License (ODbL) 1.0](licenses/stations-ODbL-1.0.txt). Extracted into
+  [`app/src/main/assets/platforms.csv`](app/src/main/assets/platforms.csv) by
+  `tools/platforms/build_platforms.py` (`python3 tools/platforms/build_platforms.py`).
 
 Dotboard is an independent project and isn't affiliated with or endorsed by National Rail Enquiries,
 Rail Delivery Group or any train operator.
@@ -133,5 +140,5 @@ This program is free software: you can redistribute it and/or modify it under th
 GNU General Public License as published by the Free Software Foundation, version 3 of the License.
 See [LICENSE](LICENSE).
 
-The bundled station data is licensed separately under ODbL 1.0, and the Dot Matrix typeface (and the bitmap
+The bundled station and platform data is licensed separately under ODbL 1.0, and the Dot Matrix typeface (and the bitmap
 fonts made from it) under the SIL Open Font License 1.1.
