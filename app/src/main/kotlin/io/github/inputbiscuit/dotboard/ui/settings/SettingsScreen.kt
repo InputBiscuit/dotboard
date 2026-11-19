@@ -38,8 +38,8 @@ import io.github.inputbiscuit.dotboard.BuildConfig
 import io.github.inputbiscuit.dotboard.core.data.FakeScenario
 import io.github.inputbiscuit.dotboard.core.render.LedTheme
 import io.github.inputbiscuit.dotboard.data.Settings
+import io.github.inputbiscuit.dotboard.location.LocationFeatures
 import io.github.inputbiscuit.dotboard.ui.components.DotboardScaffold
-import io.github.inputbiscuit.dotboard.ui.components.NearestStationPicker
 import io.github.inputbiscuit.dotboard.ui.components.SectionTitle
 import io.github.inputbiscuit.dotboard.ui.components.StationField
 
@@ -74,7 +74,7 @@ fun SettingsScreen(onBack: () -> Unit, onKeyGuide: () -> Unit, onAbout: () -> Un
             style = MaterialTheme.typography.bodySmall,
         )
         if (BuildConfig.LOCATION) {
-            NearestStationPicker(stations, onPick = { crs -> vm.update { it.copy(defaultCrs = crs) } })
+            LocationFeatures.DefaultStationPicker(stations, onPick = { crs -> vm.update { it.copy(defaultCrs = crs) } })
         }
         StationField("Station", settings.defaultCrs, { crs -> vm.update { it.copy(defaultCrs = crs) } }, stations)
         StationField(

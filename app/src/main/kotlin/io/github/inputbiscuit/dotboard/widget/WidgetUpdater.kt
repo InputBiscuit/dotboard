@@ -5,9 +5,9 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.location.Location
 import android.util.Log
 import android.util.SizeF
+import io.github.inputbiscuit.dotboard.BuildConfig
 import io.github.inputbiscuit.dotboard.app
 import io.github.inputbiscuit.dotboard.core.data.BoardQuery
 import io.github.inputbiscuit.dotboard.core.model.Departure
@@ -17,7 +17,7 @@ import io.github.inputbiscuit.dotboard.core.render.BoardFrame
 import io.github.inputbiscuit.dotboard.data.LoadedBoard
 import io.github.inputbiscuit.dotboard.data.load
 import io.github.inputbiscuit.dotboard.data.platformBoard
-import io.github.inputbiscuit.dotboard.location.ApproximateLocation
+import io.github.inputbiscuit.dotboard.location.LocationFeatures
 import java.time.LocalTime
 
 /** Loads data (through the shared cache) and redraws widgets. */
@@ -103,14 +103,14 @@ object WidgetUpdater {
         nextDeparture?.takeIf { it < settings.refreshMinutes * 60_000L }?.let { WidgetScheduler.redrawAfter(context, it) }
     }
 
-    /** The user's approximate location, fetched on first use, or null if disabled or unavailable. */
-    private fun lazyLocation(context: Context, enabled: Boolean): suspend () -> Location? {
+    /** The user's approximate (latitude, longitude), fetched on first use, or null if disabled or unavailable. */
+    private fun lazyLocation(context: Context, enabled: Boolean): suspend () -> Pair<Double, Double>? {
         var fetched = false
-        var location: Location? = null
+        var location: Pair<Double, Double>? = null
         return {
-            if (enabled && !fetched) {
+            if (enabled && BuildConfig.LOCATION && !fetched) {
                 fetched = true
-                location = (ApproximateLocation.current(context) as? ApproximateLocation.Result.Found)?.location
+                location = LocationFeatures.approximate(context)
             }
             location
         }
@@ -120,10 +120,15 @@ object WidgetUpdater {
      * Moves a location-following board to the nearest station (with a margin, so it doesn't flip between two)
      * and saves it. Without a location (no permission, location off, no fix) it keeps its current station.
      */
-    private suspend fun follow(context: Context, id: Int, config: WidgetConfig, location: suspend () -> Location?): WidgetConfig {
+    private suspend fun follow(
+        context: Context,
+        id: Int,
+        config: WidgetConfig,
+        location: suspend () -> Pair<Double, Double>?,
+    ): WidgetConfig {
         // Logs say what happened, never where: no coordinates or station names.
-        val here = location() ?: return config.also { Log.i(TAG, "Widget $id: no location available, keeping its station") }
-        val station = context.app.stations.stations().followNearest(here.latitude, here.longitude, config.crs)
+        val (lat, lon) = location() ?: return config.also { Log.i(TAG, "Widget $id: no location available, keeping its station") }
+        val station = context.app.stations.stations().followNearest(lat, lon, config.crs)
         if (station == null || station.crs == config.crs) {
             return config.also { Log.i(TAG, "Widget $id: location checked, still the nearest station") }
         }
