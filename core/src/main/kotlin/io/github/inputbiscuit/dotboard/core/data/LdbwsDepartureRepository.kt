@@ -9,11 +9,15 @@ import okhttp3.OkHttpClient
 class LdbwsDepartureRepository(
     private val apiKey: suspend () -> String,
     private val http: OkHttpClient = LdbwsClient.defaultHttpClient,
-    private val numRows: Int = 10,
 ) : DepartureRepository {
 
     override suspend fun board(query: BoardQuery): Board =
         LdbwsClient(apiKey(), http)
-            .getDepBoardWithDetails(query.crs, numRows = numRows, filterCrs = query.filterCrs)
+            .getDepBoardWithDetails(
+                query.crs,
+                numRows = query.rows,
+                filterCrs = query.filterCrs,
+                timeWindow = BoardQuery.DISCOVERY_WINDOW_MINUTES.takeIf { query.rows == BoardQuery.DISCOVERY_ROWS },
+            )
             .toBoard()
 }

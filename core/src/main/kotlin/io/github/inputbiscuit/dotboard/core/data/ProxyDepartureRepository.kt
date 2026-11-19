@@ -15,5 +15,5 @@ class ProxyDepartureRepository(
 
     private val client = ProxyClient(baseUrl.toHttpUrl(), http)
 
-    override suspend fun board(query: BoardQuery): Board = client.board(query.crs, query.filterCrs).toBoard()
+    override suspend fun board(query: BoardQuery): Board = client.board(query.crs, query.filterCrs, query.rows).toBoard()
 }

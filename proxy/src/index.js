@@ -1,17 +1,22 @@
 // Dotboard API proxy (Cloudflare Worker).
 //
-// GET /v1/board/{CRS}[?filter={CRS}]
+// GET /v1/board/{CRS}[?filter={CRS}][&rows={50|150}]
 //   → Rail Data Marketplace LDBWS GetDepBoardWithDetails/{CRS}?numRows=10[&filterCrs=…&filterType=to]
+//
+// "rows" asks for a bigger board: 50 for boards the app filters to some platforms, or 150 over a
+// 2-hour window to find out which platforms a station uses. Without it, 10 rows.
 //
 // The response body is the API's JSON, unchanged. Successful boards are cached for CACHE_SECONDS
 // by Workers Cache (see wrangler.jsonc), keyed by path + query, so requests are only accepted in one
-// canonical form (upper-case codes, at most one "filter" parameter). The API key lives in the
-// RDM_API_KEY secret and is never sent to clients. Nothing is logged.
+// canonical form (upper-case codes, at most one "filter" then at most one "rows", in that order).
+// The API key lives in the RDM_API_KEY secret and is never sent to clients. Nothing is logged.
 
 export const UPSTREAM =
   "https://api1.raildata.org.uk/1010-live-departure-board-dep1_2/LDBWS/api/20220120/GetDepBoardWithDetails/";
 export const CACHE_SECONDS = 45;
 export const ROWS = "10";
+// Allowed "rows" values, with the time window (minutes) each one asks for, if any.
+export const BIG_BOARDS = { "50": null, "150": "120" };
 
 const BOARD_PATH = /^\/v1\/board\/([A-Z]{3})$/;
 const CRS = /^[A-Z]{3}$/;
@@ -28,11 +33,16 @@ export default {
     const crs = match[1];
 
     const params = [...url.searchParams.keys()];
-    if (params.some((p) => p !== "filter") || url.searchParams.getAll("filter").length > 1) {
-      return error(400, "Only a single 'filter' parameter is allowed");
+    const canonical = ["filter", "rows"].filter((p) => params.includes(p));
+    if (params.length !== canonical.length || params.some((p, i) => p !== canonical[i])) {
+      return error(400, "Only 'filter' then 'rows', each at most once, are allowed");
     }
     const filter = url.searchParams.get("filter") ?? "";
     if (filter && !CRS.test(filter)) return error(400, "filter must be a 3-letter upper-case station code");
+    const rows = url.searchParams.get("rows");
+    if (rows !== null && !Object.hasOwn(BIG_BOARDS, rows)) {
+      return error(400, `rows must be one of ${Object.keys(BIG_BOARDS).join(", ")}`);
+    }
 
     if (env.LIMITER) {
       const client = request.headers.get("CF-Connecting-IP") ?? "unknown";
@@ -43,7 +53,8 @@ export default {
     if (!env.RDM_API_KEY) return error(503, "Proxy not configured");
 
     const upstream = new URL(UPSTREAM + crs);
-    upstream.searchParams.set("numRows", ROWS);
+    upstream.searchParams.set("numRows", rows ?? ROWS);
+    if (rows !== null && BIG_BOARDS[rows]) upstream.searchParams.set("timeWindow", BIG_BOARDS[rows]);
     if (filter) {
       upstream.searchParams.set("filterCrs", filter);
       upstream.searchParams.set("filterType", "to");

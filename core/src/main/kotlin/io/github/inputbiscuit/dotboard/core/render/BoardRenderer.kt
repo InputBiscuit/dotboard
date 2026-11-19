@@ -25,6 +25,8 @@ data class BoardFrame(
      * "Updated 22:05" at the left of the clock row.
      */
     val updatedAt: LocalTime? = null,
+    /** Show when the train is due at each stop: "Calling at: Slough (10:42), Maidenhead (10:49) and …". */
+    val callingPointTimes: Boolean = false,
 )
 
 /** Which animation frame to draw. [scrollDots] (smooth scrolling) wins over [page] (paged) for "Calling at". */
@@ -190,7 +192,7 @@ class BoardRenderer(
                 if (deps.isEmpty()) {
                     messageLines(BoardContent.Message("No services", content.board.stationName), cols, lineCount, textBottom)
                 } else {
-                    departureLines(deps, cols, lineCount)
+                    departureLines(deps, cols, lineCount, frame)
                 }
             }
             is BoardContent.Message -> messageLines(content, cols, lineCount, textBottom)
@@ -245,10 +247,10 @@ class BoardRenderer(
         )
     }
 
-    private fun departureLines(deps: List<Departure>, cols: Int, lineCount: Int): List<BoardPlan.Line> {
+    private fun departureLines(deps: List<Departure>, cols: Int, lineCount: Int, frame: BoardFrame): List<BoardPlan.Line> {
         if (lineCount <= 0) return emptyList()
         val lines = mutableListOf<BoardPlan.Line>(BoardPlan.Line.DepartureRow(0, deps[0], 1))
-        if (lineCount >= 2) lines += callingAtLine(LINE_PITCH, deps[0], cols)
+        if (lineCount >= 2) lines += callingAtLine(LINE_PITCH, deps[0], cols, frame)
 
         val others = deps.drop(1).mapIndexed { i, d -> (i + 2) to d }
         val slots = lineCount - 2
@@ -265,12 +267,19 @@ class BoardRenderer(
         return lines
     }
 
-    private fun callingAtLine(y: Int, d: Departure, cols: Int): BoardPlan.Line.CallingAt {
+    private fun callingAtLine(y: Int, d: Departure, cols: Int, frame: BoardFrame): BoardPlan.Line.CallingAt {
         val f = fonts.regular
         val (label, text) = if (d.status == DepartureStatus.Cancelled) {
             null to (d.cancelReason?.withFullStop() ?: "This train has been cancelled.")
         } else {
-            val names = d.callingPoints.map { it.name }.filter { it.isNotBlank() }.ifEmpty { listOf(d.destination) }
+            val names = if (frame.callingPointTimes) {
+                // With times, stops the train no longer calls at are left out, as there's no time to show.
+                d.callingPoints.filter { it.name.isNotBlank() && it.status != DepartureStatus.Cancelled }.map { stop ->
+                    stop.time?.let { "${stop.name} (${formatBoardTime(it, frame.use24h)})" } ?: stop.name
+                }
+            } else {
+                d.callingPoints.map { it.name }.filter { it.isNotBlank() }
+            }.ifEmpty { listOf(d.destination) }
             val calling = if (names.size == 1) {
                 "${names[0]} only."
             } else {

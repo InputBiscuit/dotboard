@@ -12,7 +12,9 @@ with live departures from any station.
 - Live departures: time, destination, platform, and "Exp 22:14", "Delayed" or "Cancelled", the way real
   boards show them
 - Scrolling calling points, alternating next trains and a ticking clock with seconds
-- Several boards on one home screen, each with its own station and an optional "calling at" filter
+- Several boards on one home screen, each with its own station and optional "calling at" and platform
+  filters
+- Optional times at each calling point: "Calling at: Slough (10:42), Maidenhead (10:49) and Reading (11:02)"
 - Resizable: bigger boards show more trains, and it adapts to both screens of a foldable
 - Battery-friendly: the scrolling text, alternating rows and clock all run in your launcher, so Dotboard only
   wakes up to refresh departures (every 15, 30 or 60 minutes, and to drop a train once it has left). Tap a

@@ -1,0 +1,2 @@
+• Platform filter: in a board's setup, choose one or more platforms to show only their trains. "All platforms" is still the default.
+• Times at calling points: optionally show when the train is due at each stop, e.g. "Slough (10:42)". Off by default; turn it on in Settings or for a single board.
