@@ -109,6 +109,7 @@ workflow artifact.
   set the key with `npx wrangler secret put RDM_API_KEY`).
 - `tools/fontgen/`: turns the Dot Matrix TTFs into the bitmap fonts in `core/src/main/resources`.
 - `tools/icon/`: generates the app and store icons.
+- `tools/platforms/`: builds the bundled platform lists from OpenStreetMap.
 - `fastlane/metadata/`: store listing for F-Droid.
 
 ## Credits
@@ -123,6 +124,10 @@ workflow artifact.
   [Open Database License (ODbL) 1.0](licenses/stations-ODbL-1.0.txt).
   Dotboard's modified copy (trimmed to CRS code and name) is at
   [`app/src/main/assets/stations.csv`](app/src/main/assets/stations.csv) and is also licensed under ODbL 1.0.
+- Platform lists: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), licensed under the
+  [Open Database License (ODbL) 1.0](licenses/stations-ODbL-1.0.txt). Extracted into
+  [`app/src/main/assets/platforms.csv`](app/src/main/assets/platforms.csv) by
+  `tools/platforms/build_platforms.py` (`python3 tools/platforms/build_platforms.py`).
 
 Dotboard is an independent project and isn't affiliated with or endorsed by National Rail Enquiries,
 Rail Delivery Group or any train operator.
@@ -135,5 +140,5 @@ This program is free software: you can redistribute it and/or modify it under th
 GNU General Public License as published by the Free Software Foundation, version 3 of the License.
 See [LICENSE](LICENSE).
 
-The bundled station data is licensed separately under ODbL 1.0, and the Dot Matrix typeface (and the bitmap
+The bundled station and platform data is licensed separately under ODbL 1.0, and the Dot Matrix typeface (and the bitmap
 fonts made from it) under the SIL Open Font License 1.1.

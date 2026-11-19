@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import io.github.inputbiscuit.dotboard.app
 import io.github.inputbiscuit.dotboard.core.data.DepartureException
+import io.github.inputbiscuit.dotboard.core.model.PlatformOrder
 import kotlinx.coroutines.delay
 
 private sealed interface Platforms {
@@ -41,6 +42,8 @@ private sealed interface Platforms {
 @Composable
 fun PlatformPicker(
     crs: String,
+    /** Platforms on the board being previewed, added to the station's list. */
+    alsoSeen: List<String>,
     selected: Set<String>,
     keepNoPlatform: Boolean,
     onSelect: (Set<String>) -> Unit,
@@ -71,7 +74,8 @@ fun PlatformPicker(
             Text("Couldn't load this station's platforms.", style = MaterialTheme.typography.bodySmall)
             TextButton(onClick = { attempt++ }) { Text("Try again") }
         }
-        is Platforms.Found -> if (p.list.isNotEmpty()) {
+        is Platforms.Found -> if (p.list.isNotEmpty() || alsoSeen.isNotEmpty()) {
+            val list = (p.list + alsoSeen).distinct().sortedWith(PlatformOrder)
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("Platforms", style = MaterialTheme.typography.bodyLarge)
                 FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -81,7 +85,7 @@ fun PlatformPicker(
                         label = { Text("All platforms") },
                     )
                     // Platforms chosen earlier that haven't been seen lately stay, so they can be turned off.
-                    (p.list + selected.filterNot { it in p.list }).forEach { platform ->
+                    (list + selected.filterNot { it in list }).forEach { platform ->
                         FilterChip(
                             selected = platform in selected,
                             onClick = { onSelect(if (platform in selected) selected - platform else selected + platform) },

@@ -12,6 +12,7 @@ import io.github.inputbiscuit.dotboard.core.model.platforms
 import io.github.inputbiscuit.dotboard.core.render.BoardContent
 import io.github.inputbiscuit.dotboard.core.render.BoardFrame
 import io.github.inputbiscuit.dotboard.core.render.BoardRenderer
+import io.github.inputbiscuit.dotboard.core.stations.PlatformList
 import kotlinx.coroutines.test.runTest
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
@@ -92,6 +93,29 @@ class PlatformAndTimesTest {
         assertEquals(listOf("1", null), b.onPlatforms(setOf("1"), keepUnknown = true).departures.map { it.platform })
     }
 
+    @Test fun `a platform number also matches its lettered parts, but not longer numbers`() {
+        val b = board(departure("11"), departure("11A"), departure("11B"), departure("110"), departure("1"))
+        assertEquals(listOf("11", "11A", "11B"), b.onPlatforms(setOf("11"), keepUnknown = false).departures.map { it.platform })
+        assertEquals(listOf("11A"), b.onPlatforms(setOf("11A"), keepUnknown = false).departures.map { it.platform })
+    }
+
+    @Test fun `bundled platform list skips comments and sorts each station`() {
+        val list = PlatformList.parse(
+            """
+            # comment
+            crs,platforms
+            PAD,1 10 2 A
+            rdg,15 1 1
+            XX,1
+            EAR,
+            """.trimIndent(),
+        )
+        assertEquals(listOf("1", "2", "10", "A"), list["pad"])
+        assertEquals(listOf("1", "15"), list["RDG"])
+        assertEquals(emptyList(), list["EAR"], "a station with no platforms is left out")
+        assertEquals(2, list.size)
+    }
+
     @Test fun `bigger boards get their own cache key`() {
         assertEquals("PAD", BoardQuery("PAD").key)
         assertEquals("PAD>RDG#50", BoardQuery.of("pad", "rdg", BoardQuery.FILTERED_ROWS).key)
@@ -114,6 +138,21 @@ class PlatformAndTimesTest {
             repo.board(BoardQuery("PAD"))
             url = server.takeRequest().url
             assertEquals(0, url.querySize, "the default board has no rows parameter")
+        }
+    }
+
+    @Test fun `an older proxy that rejects rows still gives a normal board`() = runTest {
+        MockWebServer().use { server ->
+            server.start()
+            val fixture = requireNotNull(javaClass.classLoader.getResource("depboard_PAD.json")).readText()
+            server.enqueue(MockResponse.Builder().code(400).body("""{"error":"x"}""").build())
+            server.enqueue(MockResponse.Builder().body(fixture).build())
+
+            val board = ProxyDepartureRepository(server.url("/").toString()).board(BoardQuery("PAD", rows = BoardQuery.FILTERED_ROWS))
+
+            assertEquals("50", server.takeRequest().url.queryParameter("rows"))
+            assertEquals(0, server.takeRequest().url.querySize)
+            assertEquals("London Paddington", board.stationName)
         }
     }
 }

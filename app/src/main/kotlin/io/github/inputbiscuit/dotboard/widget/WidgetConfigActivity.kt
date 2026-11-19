@@ -37,6 +37,7 @@ import io.github.inputbiscuit.dotboard.app
 import io.github.inputbiscuit.dotboard.core.data.BoardQuery
 import io.github.inputbiscuit.dotboard.core.data.DepartureException
 import io.github.inputbiscuit.dotboard.core.model.onPlatforms
+import io.github.inputbiscuit.dotboard.core.model.platforms
 import io.github.inputbiscuit.dotboard.core.render.BoardContent
 import io.github.inputbiscuit.dotboard.core.render.toBoardMessage
 import io.github.inputbiscuit.dotboard.core.stations.StationList
@@ -89,6 +90,8 @@ class WidgetConfigActivity : ComponentActivity() {
                     loaded = true
                 }
 
+                // Platforms on the preview board, so the picker offers them even before the station's list has them.
+                var previewPlatforms by remember { mutableStateOf(emptyList<String>()) }
                 val preview by produceState<BoardContent>(
                     BoardContent.Message("Loading"), crs, filter, platforms, keepNoPlatform, loaded,
                 ) {
@@ -101,7 +104,10 @@ class WidgetConfigActivity : ComponentActivity() {
                     val rows = if (platforms.isEmpty()) BoardQuery.ROWS else BoardQuery.FILTERED_ROWS
                     val query = BoardQuery.of(crs, filter, rows)
                     value = try {
-                        BoardContent.Departures(app.departures().cached(query, 60_000).board.onPlatforms(platforms, keepNoPlatform))
+                        val board = app.departures().cached(query, 60_000).board
+                        previewPlatforms = board.platforms()
+                        if (!app.settings.current().useSampleData) app.platforms.record(board)
+                        BoardContent.Departures(board.onPlatforms(platforms, keepNoPlatform))
                     } catch (e: DepartureException) {
                         e.toBoardMessage()
                     }
@@ -139,6 +145,7 @@ class WidgetConfigActivity : ComponentActivity() {
                             if (!follow) {
                                 PlatformPicker(
                                     crs = crs,
+                                    alsoSeen = previewPlatforms,
                                     selected = platforms,
                                     keepNoPlatform = keepNoPlatform,
                                     onSelect = { platforms = it },

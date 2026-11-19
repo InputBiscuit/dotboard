@@ -110,18 +110,22 @@ fun Board.withoutDeparted(now: LocalTime, graceMinutes: Int = 1): Board {
 }
 
 /**
- * Only services from [platforms] (all of them when it's empty). Services with no platform yet are kept only if
- * [keepUnknown]: at big stations the platform is often shown just before departure.
+ * Only services from [platforms] (all of them when it's empty). A plain number also matches its lettered parts, so
+ * "11" keeps "11A" and "11B" (but not "110"); "11A" matches only itself. Services with no platform yet are kept only
+ * if [keepUnknown]: at big stations the platform is often shown just before departure.
  */
 fun Board.onPlatforms(platforms: Set<String>, keepUnknown: Boolean): Board {
     if (platforms.isEmpty()) return this
     val wanted = platforms.mapTo(HashSet()) { it.trim().uppercase() }
     val kept = departures.filter { d ->
         val p = d.platform?.trim()?.uppercase()
-        if (p.isNullOrEmpty()) keepUnknown else p in wanted
+        if (p.isNullOrEmpty()) keepUnknown else p in wanted || PLATFORM_PART.find(p)?.groupValues?.get(1) in wanted
     }
     return if (kept.size == departures.size) this else copy(departures = kept)
 }
+
+/** A lettered part of a numbered platform: "11A" → "11". */
+private val PLATFORM_PART = Regex("""^(\d+)[A-Z]+$""")
 
 /** Every platform on the board, in [PlatformOrder]. */
 fun Board.platforms(): List<String> =
