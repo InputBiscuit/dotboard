@@ -24,16 +24,20 @@ class PlatformStore(private val context: Context, private val clock: () -> Long 
     /**
      * The station's platforms, fetching the big board if there's no list from the last week. Empty if the station
      * shows no platform numbers. Throws `DepartureException` if the board can't be fetched.
+     *
+     * @param live false for sample data: the list is worked out from [repo] each time and never saved, so sample
+     *   platforms don't end up in a real station's list (or the other way round).
      */
-    suspend fun platforms(crs: String, repo: CachingDepartureRepository): List<String> {
+    suspend fun platforms(crs: String, repo: CachingDepartureRepository, live: Boolean = true): List<String> {
         val code = crs.trim().uppercase()
+        if (!live) return discover(code, repo)
         val prefs = context.platformDataStore.data.first()
         val known = prefs[platformsKey(code)]
         val checkedAt = prefs[checkedKey(code)]
         if (known != null && checkedAt != null && clock() - checkedAt in 0..MAX_AGE_MILLIS) {
             return known.sortedWith(PlatformOrder)
         }
-        val seen = repo.cached(BoardQuery(code, rows = BoardQuery.DISCOVERY_ROWS), maxAgeMillis = 60 * 60_000L).board.platforms()
+        val seen = discover(code, repo)
         context.platformDataStore.edit {
             it[platformsKey(code)] = (known.orEmpty() + seen).toSet()
             it[checkedKey(code)] = clock()
@@ -41,7 +45,10 @@ class PlatformStore(private val context: Context, private val clock: () -> Long 
         return (known.orEmpty() + seen).distinct().sortedWith(PlatformOrder)
     }
 
-    /** Adds platforms from a normal board to the station's list, if it has one. */
+    private suspend fun discover(crs: String, repo: CachingDepartureRepository): List<String> =
+        repo.cached(BoardQuery(crs, rows = BoardQuery.DISCOVERY_ROWS), maxAgeMillis = 60 * 60_000L).board.platforms()
+
+    /** Adds platforms from a normal (live, not sample) board to the station's list, if it has one. */
     suspend fun record(board: Board) {
         val code = board.crs.trim().uppercase().takeIf { it.length == 3 } ?: return
         val seen = board.platforms().takeIf { it.isNotEmpty() } ?: return

@@ -71,7 +71,7 @@ object WidgetUpdater {
             }
             val content = when (val c = loaded.content) {
                 is BoardContent.Departures -> {
-                    app.platforms.record(c.board)
+                    if (!settings.useSampleData) app.platforms.record(c.board)
                     BoardContent.Departures(c.board.onPlatforms(platforms, config?.keepNoPlatform ?: false))
                 }
                 else -> c

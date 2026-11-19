@@ -53,7 +53,8 @@ fun PlatformPicker(
         if (crs.length != 3) return@produceState
         delay(300) // let typing settle
         value = try {
-            Platforms.Found(context.app.platforms.platforms(crs, context.app.departures()))
+            val live = !context.app.settings.current().useSampleData
+            Platforms.Found(context.app.platforms.platforms(crs, context.app.departures(), live))
         } catch (e: DepartureException) {
             Platforms.Failed
         }
