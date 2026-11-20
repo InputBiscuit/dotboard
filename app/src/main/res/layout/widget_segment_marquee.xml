@@ -17,25 +17,34 @@
         android:importantForAccessibility="no"
         android:scaleType="fitXY" />
 
-    <TextView
-        android:id="@+id/marquee"
+    <!-- Holds the marquee's offsets as padding on Android 11, which can't set margins remotely. A LinearLayout,
+         since FrameLayout ignores negative padding. -->
+    <LinearLayout
+        android:id="@+id/marquee_area"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:ellipsize="marquee"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:fontFamily="sans-serif-condensed-medium"
-        android:gravity="top|start"
-        android:includeFontPadding="false"
-        android:marqueeRepeatLimit="marquee_forever"
-        android:fadingEdgeLength="0dp"
-        android:requiresFadingEdge="none"
-        android:scrollHorizontally="true"
-        android:singleLine="true"
-        android:textStyle="normal">
+        android:orientation="vertical">
 
-        <requestFocus />
-    </TextView>
+        <TextView
+            android:id="@+id/marquee"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:fontFamily="sans-serif-condensed-medium"
+            android:gravity="top|start"
+            android:includeFontPadding="false"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:fadingEdgeLength="0dp"
+            android:requiresFadingEdge="none"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:textStyle="normal">
+
+            <requestFocus />
+        </TextView>
+    </LinearLayout>
 
     <ImageView
         android:id="@+id/mask"

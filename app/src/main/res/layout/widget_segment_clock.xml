@@ -14,10 +14,14 @@
         android:importantForAccessibility="no"
         android:scaleType="fitXY" />
 
-    <FrameLayout
+    <!-- Padded on Android 11 instead of a margin on clock_row (see WidgetRenderer.offset). A LinearLayout,
+         since FrameLayout ignores negative padding. -->
+    <LinearLayout
         android:id="@+id/clock_area"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
 
         <LinearLayout
             android:id="@+id/clock_row"
@@ -43,7 +47,7 @@
                 android:includeFontPadding="false"
                 android:textStyle="bold" />
         </LinearLayout>
-    </FrameLayout>
+    </LinearLayout>
 
     <ImageView
         android:id="@+id/mask"
