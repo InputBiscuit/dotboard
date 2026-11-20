@@ -25,7 +25,7 @@ with live departures from any station.
 - Built-in sample boards for trying it out
 - No ads, no tracking, no analytics, no Google Play Services. Free and open source (GPL-3.0)
 
-Requires Android 12 or newer.
+Requires Android 11 or newer.
 
 ## Install
 

@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
+import android.os.Build
 import android.util.SizeF
 import android.util.TypedValue
 import android.widget.RemoteViews
@@ -49,11 +50,11 @@ object WidgetRenderer {
     /**
      * Padding that keeps the board clear of the launcher's rounded corners: for corner radius r, an inset of
      * r(1 - 1/√2) on each side puts the board's corners exactly on the curve, so nothing is clipped.
-     * Uses the system widget radius (Android 12+), or 16dp if a launcher reports none.
+     * Uses the system widget radius (Android 12+; 16dp on Android 11), or 16dp if a launcher reports none.
      */
     fun cornerInsetPx(context: Context): Int {
         val res = context.resources
-        val radius = res.getDimensionPixelSize(android.R.dimen.system_app_widget_background_radius)
+        val radius = res.getDimensionPixelSize(R.dimen.widget_corner_radius)
             .takeIf { it > 0 } ?: (16 * res.displayMetrics.density).toInt()
         return ceil(radius * (1 - 1 / sqrt(2.0))).toInt() + 1
     }
@@ -81,7 +82,8 @@ object WidgetRenderer {
 
     /**
      * One RemoteViews per distinct size the launcher reports (e.g. a foldable's inner and outer screens);
-     * the launcher picks the best fit. [animated] false draws one still bitmap (used if over the bitmap budget).
+     * the launcher picks the best fit. Android 11 only takes a landscape and a portrait layout, so there it uses
+     * the widest and the narrowest size. [animated] false draws one still bitmap (used if over the bitmap budget).
      */
     fun build(
         context: Context,
@@ -92,10 +94,16 @@ object WidgetRenderer {
         animated: Boolean = true,
     ): RemoteViews {
         val density = context.resources.displayMetrics.density
-        val bySize = sizesDp.distinct().associateWith { size ->
+        val distinct = sizesDp.distinct()
+        val sizes = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) distinct else listOf(distinct.maxBy { it.width }, distinct.minBy { it.width }).distinct()
+        val bySize = sizes.associateWith { size ->
             forSize(context, frame, theme, (size.width * density).toInt(), (size.height * density).toInt(), onClick, animated)
         }
-        return if (bySize.size == 1) bySize.values.first() else RemoteViews(bySize)
+        return when {
+            bySize.size == 1 -> bySize.values.first()
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> RemoteViews(bySize)
+            else -> RemoteViews(bySize.getValue(sizes[0]), bySize.getValue(sizes[1]))
+        }
     }
 
     private fun forSize(
@@ -166,10 +174,9 @@ object WidgetRenderer {
             setTextColor(R.id.marquee, theme.palette.lit)
             setInt(R.id.marquee, "setBackgroundColor", theme.palette.unlit)
             setTextViewTextSize(R.id.marquee, TypedValue.COMPLEX_UNIT_PX, size)
-            setViewLayoutMargin(R.id.marquee, RemoteViews.MARGIN_START, info.regionX * pitch, TypedValue.COMPLEX_UNIT_PX)
             // Put the baseline on the bottom of the cap rows, like the dot font.
             val baseline = (info.top - segment.top + TEXT_CAP_ROWS) * pitch
-            setViewLayoutMargin(R.id.marquee, RemoteViews.MARGIN_TOP, baseline - ascent, TypedValue.COMPLEX_UNIT_PX)
+            offset(R.id.marquee, R.id.marquee_area, info.regionX * pitch, baseline - ascent)
             // A focusable TextView would swallow the first tap, so make it refresh too.
             setOnClickPendingIntent(R.id.marquee, onClick)
         }
@@ -192,7 +199,21 @@ object WidgetRenderer {
                 setTextViewTextSize(id, TypedValue.COMPLEX_UNIT_PX, size)
             }
             // The row aligns on the big digits' baseline: put it on the band's bottom dot row.
-            setViewLayoutMargin(R.id.clock_row, RemoteViews.MARGIN_TOP, CLOCK_ROWS * pitch - mainAscent, TypedValue.COMPLEX_UNIT_PX)
+            offset(R.id.clock_row, R.id.clock_area, start = null, top = CLOCK_ROWS * pitch - mainAscent)
+        }
+
+        /**
+         * Moves [view] by [start] and [top] px (often negative: the font's ascent is taller than its caps) inside
+         * [wrapper], which fills the band. Android 12+ sets margins on the view. Android 11 can't set margins in
+         * RemoteViews, so it pads the wrapper instead, which places the view the same way (negative padding too).
+         */
+        private fun RemoteViews.offset(view: Int, wrapper: Int, start: Float?, top: Float) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                start?.let { setViewLayoutMargin(view, RemoteViews.MARGIN_START, it, TypedValue.COMPLEX_UNIT_PX) }
+                setViewLayoutMargin(view, RemoteViews.MARGIN_TOP, top, TypedValue.COMPLEX_UNIT_PX)
+            } else {
+                setViewPadding(wrapper, (start ?: 0f).toInt(), top.toInt(), 0, 0)
+            }
         }
 
         private fun mask(segment: Segment): Bitmap {

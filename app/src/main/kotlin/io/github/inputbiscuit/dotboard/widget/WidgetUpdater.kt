@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.util.SizeF
+import androidx.core.os.BundleCompat
 import io.github.inputbiscuit.dotboard.BuildConfig
 import io.github.inputbiscuit.dotboard.app
 import io.github.inputbiscuit.dotboard.core.data.BoardQuery
@@ -150,7 +151,8 @@ object WidgetUpdater {
     /** The sizes (in dp) the widget is currently shown at, e.g. both screens of a foldable. */
     private fun sizes(manager: AppWidgetManager, id: Int): List<SizeF> {
         val options = manager.getAppWidgetOptions(id)
-        options.getParcelableArrayList(AppWidgetManager.OPTION_APPWIDGET_SIZES, SizeF::class.java)
+        // Android 12+ lists every size; Android 11 only gives the min/max below.
+        BundleCompat.getParcelableArrayList(options, AppWidgetManager.OPTION_APPWIDGET_SIZES, SizeF::class.java)
             ?.takeIf { it.isNotEmpty() }
             ?.let { return it }
         val minW = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)

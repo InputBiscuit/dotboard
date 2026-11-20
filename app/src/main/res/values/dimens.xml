@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget corner radius. Android 11 has no system value, so use a typical launcher's 16dp;
+         values-v31 uses the system's. -->
+    <dimen name="widget_corner_radius">16dp</dimen>
+</resources>
