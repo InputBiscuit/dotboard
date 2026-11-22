@@ -1,0 +1,3 @@
+• Station name: boards can show the station's name across the top, e.g. "London Paddington Station". On by default; turn it off in Settings or for a single board.
+• Bigger boards: the clock stays at the bottom, and spare space shows more trains or the later trains' calling points (your choice, in Settings or for each board).
+• Fixed a dark line under the clock on tall boards.

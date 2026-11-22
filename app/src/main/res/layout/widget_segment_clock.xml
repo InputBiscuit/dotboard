@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The board clock, kept ticking by the launcher (TextClock), so the app never wakes for it.
-     Big HH:mm and smaller :ss share a baseline; the dot mask on top turns them into LED dots. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     Big HH:mm and smaller :ss share a baseline; the dot mask on top turns them into LED dots.
+     The clock and mask are pinned to the band image's top and bottom, so the clock's font (taller than the
+     digits) can't make the band taller than its rows. -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -19,7 +21,9 @@
     <LinearLayout
         android:id="@+id/clock_area"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/image"
+        android:layout_alignBottom="@id/image"
         android:gravity="center_horizontal"
         android:orientation="vertical">
 
@@ -52,7 +56,9 @@
     <ImageView
         android:id="@+id/mask"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/image"
+        android:layout_alignBottom="@id/image"
         android:importantForAccessibility="no"
         android:scaleType="fitXY" />
-</FrameLayout>
+</RelativeLayout>

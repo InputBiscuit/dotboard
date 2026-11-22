@@ -63,11 +63,15 @@ object WidgetUpdater {
             if (config?.followLocation == true) config = follow(context, id, config, location)
             val crs = config?.crs ?: settings.defaultCrs
             val platforms = config?.platforms.orEmpty()
+            val stationName = config?.stationName ?: settings.showStationName
+            val sizes = sizes(manager, id)
             val loaded = if (crs.length != 3) {
                 LoadedBoard(BoardContent.Message("Tap to set up"))
             } else {
-                // A platform-filtered board asks for more services, so one platform still has a few trains.
-                val rows = if (platforms.isEmpty()) BoardQuery.ROWS else BoardQuery.FILTERED_ROWS
+                // More services for a platform-filtered board (so one platform still has a few trains) and for a
+                // board with room for more than the usual number.
+                val wantsMore = platforms.isNotEmpty() || WidgetRenderer.trainRows(context, sizes, stationName) > BoardQuery.ROWS
+                val rows = if (wantsMore) BoardQuery.FILTERED_ROWS else BoardQuery.ROWS
                 repo.load(BoardQuery.of(crs, config?.filterCrs ?: settings.defaultFilterCrs, rows), maxAge)
             }
             val content = when (val c = loaded.content) {
@@ -85,11 +89,12 @@ object WidgetUpdater {
                 drawClock = false,
                 updatedAt = loaded.updatedAt,
                 callingPointTimes = config?.callingPointTimes ?: settings.showCallingPointTimes,
+                stationName = stationName,
+                spareSpace = config?.spareSpace ?: settings.spareSpace,
             )
             (content as? BoardContent.Departures)?.board?.departures?.firstOrNull()?.let { first ->
                 millisUntilDeparted(first)?.let { nextDeparture = minOf(nextDeparture ?: it, it) }
             }
-            val sizes = sizes(manager, id)
             val click = refreshIntent(context, id)
             try {
                 manager.updateAppWidget(id, WidgetRenderer.build(context, frame, settings.theme, sizes, click))

@@ -9,7 +9,17 @@ import java.time.LocalTime
 /** What the board shows: departures, or a message such as "No API key" drawn in dot-matrix style. */
 sealed interface BoardContent {
     data class Departures(val board: Board) : BoardContent
-    data class Message(val title: String, val detail: String? = null) : BoardContent
+    /** [station], when known, is shown across the top like a departure board's own name (see [BoardFrame.stationName]). */
+    data class Message(val title: String, val detail: String? = null, val station: String? = null) : BoardContent
+}
+
+/** What a board does with rows that the first train and its scrolling "Calling at" leave. */
+enum class SpareSpace {
+    /** As many trains as fit; later trains get their calling points only once every train is listed. */
+    TRAINS,
+
+    /** Calling points for the 2nd, 3rd, ... trains while they fit, then the rest of the trains on one line each. */
+    CALLING_POINTS,
 }
 
 data class BoardFrame(
@@ -27,6 +37,9 @@ data class BoardFrame(
     val updatedAt: LocalTime? = null,
     /** Show when the train is due at each stop: "Calling at: Slough (10:42), Maidenhead (10:49) and …". */
     val callingPointTimes: Boolean = false,
+    /** The station's name in bold across the top, "London Paddington Station", when the board has room. */
+    val stationName: Boolean = false,
+    val spareSpace: SpareSpace = SpareSpace.TRAINS,
 )
 
 /** Which animation frame to draw. [scrollDots] (smooth scrolling) wins over [page] (paged) for "Calling at". */
@@ -145,11 +158,17 @@ class BoardPlan internal constructor(
         }
         class Alternating(override val y: Int, val options: List<Pair<Int, Departure>>) : Line
         class Text(override val y: Int, val text: String, val bold: Boolean) : Line
+
+        /** One line of a later train's calling points: still text, wrapped, with the label on its first line only. */
+        class CallingAtText(override val y: Int, val label: String?, val x: Int, val text: String) : Line
     }
 }
 
 /** Rows per text line: 9-row font plus a 3-row gap. */
 internal const val LINE_PITCH = 12
+
+/** The station name needs room for itself, the first train and its "Calling at". */
+private const val MIN_LINES_FOR_NAME = 3
 
 /**
  * Lays out and draws a UK-style departure board onto a [PixelBuffer]. Pure Kotlin: no Android types, so it's
@@ -160,7 +179,9 @@ internal const val LINE_PITCH = 12
  *  Calling at: York, Malton and Scarborough   (scrolls)
  *  2nd / 3rd departure                        (alternates)
  *                 22:05:41                    (clock)
- * Taller grids get more departure rows; narrow ones drop the ordinal and platform columns.
+ * Taller grids get more departure rows (or later trains' calling points, see [SpareSpace]), with the clock kept at
+ * the bottom; narrow ones drop the ordinal and platform columns. [BoardFrame.stationName] adds the station's name
+ * as a bold top line.
  */
 class BoardRenderer(
     private val fonts: DotFonts = DotFonts.default,
@@ -173,36 +194,83 @@ class BoardRenderer(
 
     fun plan(frame: BoardFrame, cols: Int, rows: Int): BoardPlan {
         val marginX = if (!margins) 0 else if (cols >= 200) 3 else if (cols >= 120) 2 else 0
-        val marginY = if (!margins) 0 else if (rows >= 60) 2 else if (rows >= 40) 1 else 0
+        val marginY = marginY(rows)
         val inner = innerPlan(frame, cols - 2 * marginX, rows - 2 * marginY)
         return BoardPlan(cols, rows, marginX, marginY, inner)
     }
 
+    /**
+     * How many trains a board [rows] dots tall (with a clock) can list on one line each: the first train plus every
+     * line after its "Calling at" and the station name. Lets a widget ask for more trains when it has room.
+     */
+    fun trainRows(rows: Int, stationName: Boolean): Int {
+        val lines = textLines(rows - 2 * marginY(rows), clock = true)
+        return (lines - (if (stationName && lines >= MIN_LINES_FOR_NAME) 1 else 0) - 1).coerceAtLeast(0)
+    }
+
+    private fun marginY(rows: Int) = if (!margins) 0 else if (rows >= 60) 2 else if (rows >= 40) 1 else 0
+
+    private fun clockTop(rows: Int, clock: Boolean): Int? =
+        if (clock && rows >= 40) rows - fonts.boldTall.height - (if (rows >= 64) 2 else 1) else null
+
+    /** Lines of text above the clock (or in the whole board, without one). */
+    private fun textLines(rows: Int, clock: Boolean): Int {
+        val textBottom = clockTop(rows, clock)?.let { it - LINE_PITCH } ?: rows
+        return if (textBottom >= fonts.regular.height) (textBottom - fonts.regular.height) / LINE_PITCH + 1 else 0
+    }
+
     private fun innerPlan(frame: BoardFrame, cols: Int, rows: Int): BoardPlan.Inner {
         val f = fonts.regular
-        val showClock = frame.clock != null && rows >= 40
-        val clockTop = if (showClock) rows - fonts.boldTall.height - (if (rows >= 64) 2 else 1) else null
+        val clockTop = clockTop(rows, frame.clock != null)
         val textBottom = clockTop?.let { it - LINE_PITCH } ?: rows
-        val lineCount = if (textBottom >= f.height) (textBottom - f.height) / LINE_PITCH + 1 else 0
+        val lineCount = textLines(rows, frame.clock != null)
         val columns = columns(cols)
 
-        val lines = when (val content = frame.content) {
-            is BoardContent.Departures -> {
-                val deps = content.board.departures
-                if (deps.isEmpty()) {
-                    messageLines(BoardContent.Message("No services", content.board.stationName), cols, lineCount, textBottom)
-                } else {
-                    departureLines(deps, cols, lineCount, frame)
-                }
-            }
-            is BoardContent.Message -> messageLines(content, cols, lineCount, textBottom)
+        val stationName = when (val content = frame.content) {
+            is BoardContent.Departures -> content.board.stationName
+            is BoardContent.Message -> content.station
         }
-        // Centre the clock in the space below the last line of text rather than pinning it to the bottom.
-        val centredClockTop = clockTop?.let { lowest ->
-            val textEnd = (lines.maxOfOrNull { it.y } ?: -LINE_PITCH) + f.height
+        // The name only when it leaves room for the first train and its "Calling at".
+        val title = stationName?.takeIf { frame.stationName && it.isNotBlank() && lineCount >= MIN_LINES_FOR_NAME }
+            ?.let { stationTitle(it, cols) }
+        val first = if (title != null) 1 else 0
+
+        val lines = buildList {
+            title?.let { add(BoardPlan.Line.Text(0, it, bold = true)) }
+            addAll(
+                when (val content = frame.content) {
+                    is BoardContent.Departures -> {
+                        val deps = content.board.departures
+                        if (deps.isEmpty()) {
+                            // With the name across the top, the message doesn't repeat it.
+                            val message = BoardContent.Message("No services", content.board.stationName.takeIf { title == null })
+                            messageLines(message, cols, lineCount - first, y(first), textBottom)
+                        } else {
+                            departureLines(deps, cols, lineCount - first, first, frame)
+                        }
+                    }
+                    is BoardContent.Message -> messageLines(content, cols, lineCount - first, y(first), textBottom)
+                },
+            )
+        }
+        // Centre the clock in the space below the text area: at the bottom of a tall board even when it runs out of
+        // trains, and close under the last line of a full one.
+        val placedClockTop = clockTop?.let { lowest ->
+            val textEnd = y(lineCount - 1) + f.height
             (textEnd + (rows - textEnd - fonts.boldTall.height) / 2).coerceIn(textEnd + 3, lowest)
         }
-        return BoardPlan.Inner(cols, rows, frame, lines, centredClockTop, fonts.boldTall.height, columns)
+        return BoardPlan.Inner(cols, rows, frame, lines, placedClockTop, fonts.boldTall.height, columns)
+    }
+
+    /**
+     * "London Paddington Station" in the bold font. A county in brackets goes first ("Adlington (Cheshire)" is
+     * "Adlington Station": the board is only ever for one station), then " Station", then whole words.
+     */
+    private fun stationTitle(name: String, cols: Int): String {
+        val bold = fonts.bold
+        val short = name.replace(Regex("""\s*\([^)]*\)"""), "").trim().ifEmpty { name.trim() }
+        val full = if (short.endsWith(" Station")) short else "$short Station"
+        return listOf(full, short).firstOrNull { bold.width(it) <= cols } ?: bold.fitWords(short, cols)
     }
 
     fun render(plan: BoardPlan, animation: Animation = Animation.Static): PixelBuffer {
@@ -247,29 +315,89 @@ class BoardRenderer(
         )
     }
 
-    private fun departureLines(deps: List<Departure>, cols: Int, lineCount: Int, frame: BoardFrame): List<BoardPlan.Line> {
+    /**
+     * The first train and its scrolling "Calling at", then the later trains in [lineCount] lines starting at line
+     * [first]. Later trains' calling points (still, wrapped text) are added as [BoardFrame.spareSpace] allows, from
+     * the 2nd train down, stopping at the first that doesn't fit whole. If the trains don't all fit, the last row
+     * alternates between the next two.
+     */
+    private fun departureLines(
+        deps: List<Departure>,
+        cols: Int,
+        lineCount: Int,
+        first: Int,
+        frame: BoardFrame,
+    ): List<BoardPlan.Line> {
         if (lineCount <= 0) return emptyList()
-        val lines = mutableListOf<BoardPlan.Line>(BoardPlan.Line.DepartureRow(0, deps[0], 1))
-        if (lineCount >= 2) lines += callingAtLine(LINE_PITCH, deps[0], cols, frame)
+        val lines = mutableListOf<BoardPlan.Line>(BoardPlan.Line.DepartureRow(y(first), deps[0], 1))
+        if (lineCount >= 2) lines += callingAtLine(y(first + 1), deps[0], cols, frame)
 
         val others = deps.drop(1).mapIndexed { i, d -> (i + 2) to d }
         val slots = lineCount - 2
-        if (slots >= 1 && others.isNotEmpty()) {
-            if (others.size <= slots) {
-                others.forEachIndexed { i, (ordinal, d) -> lines += BoardPlan.Line.DepartureRow(y(2 + i), d, ordinal) }
-            } else {
-                others.take(slots - 1).forEachIndexed { i, (ordinal, d) ->
-                    lines += BoardPlan.Line.DepartureRow(y(2 + i), d, ordinal)
-                }
-                lines += BoardPlan.Line.Alternating(y(1 + slots), others.drop(slots - 1).take(2))
-            }
+        if (slots < 1 || others.isEmpty()) return lines
+
+        // Wrapped lazily: only the trains that might get their calling points are measured.
+        val stops = others.map { (_, d) -> lazy { stillCallingAt(d, cols, frame) } }
+        // TRAINS: rows for every train come first, so only what's left over goes to calling points.
+        // CALLING_POINTS: each expanded train costs its own row too.
+        var spare = when (frame.spareSpace) {
+            SpareSpace.TRAINS -> if (others.size <= slots) slots - others.size else 0
+            SpareSpace.CALLING_POINTS -> slots
+        }
+        val rowCost = if (frame.spareSpace == SpareSpace.CALLING_POINTS) 1 else 0
+        var expanded = 0
+        while (expanded < others.size && rowCost + stops[expanded].value.size <= spare) {
+            spare -= rowCost + stops[expanded].value.size
+            expanded++
+        }
+
+        var line = first + 2
+        for (i in 0 until expanded) {
+            val (ordinal, d) = others[i]
+            lines += BoardPlan.Line.DepartureRow(y(line++), d, ordinal)
+            stops[i].value.forEach { lines += it.at(y(line++)) }
+        }
+        val rest = others.drop(expanded)
+        val left = first + lineCount - line
+        if (rest.size <= left) {
+            rest.forEach { (ordinal, d) -> lines += BoardPlan.Line.DepartureRow(y(line++), d, ordinal) }
+        } else if (left >= 1) {
+            rest.take(left - 1).forEach { (ordinal, d) -> lines += BoardPlan.Line.DepartureRow(y(line++), d, ordinal) }
+            lines += BoardPlan.Line.Alternating(y(line), rest.drop(left - 1).take(2))
         }
         return lines
     }
 
+    /** A later train's "Calling at" (or cancellation) as still lines wrapped to the board; y is set when placed. */
+    private fun stillCallingAt(d: Departure, cols: Int, frame: BoardFrame): List<BoardPlan.Line.CallingAtText> {
+        val (label, text) = callingText(d, frame)
+        val x = label?.let { fonts.regular.width(it) + 4 } ?: 0
+        return fonts.regular.wrap(text, (cols - x).coerceAtLeast(1)).mapIndexed { i, page ->
+            BoardPlan.Line.CallingAtText(0, label.takeIf { i == 0 }, x, page)
+        }
+    }
+
+    private fun BoardPlan.Line.CallingAtText.at(y: Int) = BoardPlan.Line.CallingAtText(y, label, x, text)
+
     private fun callingAtLine(y: Int, d: Departure, cols: Int, frame: BoardFrame): BoardPlan.Line.CallingAt {
         val f = fonts.regular
-        val (label, text) = if (d.status == DepartureStatus.Cancelled) {
+        val (label, text) = callingText(d, frame)
+        val regionX = label?.let { f.width(it) + 4 } ?: 0
+        val regionWidth = (cols - regionX).coerceAtLeast(1)
+        return BoardPlan.Line.CallingAt(
+            y = y,
+            label = label,
+            regionX = regionX,
+            regionWidth = regionWidth,
+            text = text,
+            textWidth = f.width(text),
+            pages = f.wrap(text, regionWidth).ifEmpty { listOf("") },
+        )
+    }
+
+    /** "Calling at:" and the stops (with times if chosen, and any delay reason), or a cancelled train's reason. */
+    private fun callingText(d: Departure, frame: BoardFrame): Pair<String?, String> =
+        if (d.status == DepartureStatus.Cancelled) {
             null to (d.cancelReason?.withFullStop() ?: "This train has been cancelled.")
         } else {
             val names = if (frame.callingPointTimes) {
@@ -287,23 +415,13 @@ class BoardRenderer(
             }
             "Calling at:" to (calling + (d.delayReason?.let { "  ${it.withFullStop()}" } ?: ""))
         }
-        val regionX = label?.let { f.width(it) + 4 } ?: 0
-        val regionWidth = (cols - regionX).coerceAtLeast(1)
-        return BoardPlan.Line.CallingAt(
-            y = y,
-            label = label,
-            regionX = regionX,
-            regionWidth = regionWidth,
-            text = text,
-            textWidth = f.width(text),
-            pages = f.wrap(text, regionWidth).ifEmpty { listOf("") },
-        )
-    }
 
+    /** The message centred between [top] and [textBottom]. */
     private fun messageLines(
         message: BoardContent.Message,
         cols: Int,
         lineCount: Int,
+        top: Int,
         textBottom: Int,
     ): List<BoardPlan.Line> {
         if (lineCount <= 0) return emptyList()
@@ -312,8 +430,8 @@ class BoardRenderer(
             message.detail?.let { detail -> fonts.regular.wrap(detail, cols).forEach { add(it to false) } }
         }.take(lineCount)
         val blockHeight = (texts.size - 1) * LINE_PITCH + fonts.regular.height
-        val top = ((textBottom - blockHeight) / 2).coerceAtLeast(0)
-        return texts.mapIndexed { i, (text, bold) -> BoardPlan.Line.Text(top + i * LINE_PITCH, text, bold) }
+        val blockTop = top + ((textBottom - top - blockHeight) / 2).coerceAtLeast(0)
+        return texts.mapIndexed { i, (text, bold) -> BoardPlan.Line.Text(blockTop + i * LINE_PITCH, text, bold) }
     }
 
     private fun drawLine(buffer: PixelBuffer, plan: BoardPlan.Inner, line: BoardPlan.Line, animation: Animation) {
@@ -327,6 +445,10 @@ class BoardRenderer(
             is BoardPlan.Line.Text -> {
                 val font = if (line.bold) fonts.bold else fonts.regular
                 font.draw(buffer, line.text, (plan.cols - font.width(line.text)) / 2, line.y)
+            }
+            is BoardPlan.Line.CallingAtText -> {
+                line.label?.let { fonts.regular.draw(buffer, it, 0, line.y) }
+                fonts.regular.draw(buffer, line.text, line.x, line.y)
             }
         }
     }

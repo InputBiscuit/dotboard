@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import io.github.inputbiscuit.dotboard.BuildConfig
+import io.github.inputbiscuit.dotboard.core.render.SpareSpace
 import kotlinx.coroutines.flow.first
 
 private val Context.widgetDataStore by preferencesDataStore(name = "widgets")
@@ -19,6 +20,8 @@ private val Context.widgetDataStore by preferencesDataStore(name = "widgets")
  * @param platforms only show services from these platforms; empty = all platforms.
  * @param keepNoPlatform with [platforms] set, also show services that have no platform yet.
  * @param callingPointTimes this board's own choice of times at calling points, or null to follow Settings.
+ * @param stationName this board's own choice of showing the station's name, or null to follow Settings.
+ * @param spareSpace this board's own choice of what fills spare rows, or null to follow Settings.
  */
 data class WidgetConfig(
     val crs: String,
@@ -27,6 +30,8 @@ data class WidgetConfig(
     val platforms: Set<String> = emptySet(),
     val keepNoPlatform: Boolean = false,
     val callingPointTimes: Boolean? = null,
+    val stationName: Boolean? = null,
+    val spareSpace: SpareSpace? = null,
 )
 
 /** Each widget's own station and optional "calling at" filter, keyed by app widget id. */
@@ -42,6 +47,8 @@ class WidgetConfigStore(private val context: Context) {
             platforms = prefs[platformsKey(id)].orEmpty(),
             keepNoPlatform = prefs[keepNoPlatformKey(id)] ?: false,
             callingPointTimes = prefs[timesKey(id)],
+            stationName = prefs[stationNameKey(id)],
+            spareSpace = prefs[spareSpaceKey(id)]?.let { name -> SpareSpace.entries.firstOrNull { it.name == name } },
         )
     }
 
@@ -53,6 +60,8 @@ class WidgetConfigStore(private val context: Context) {
             it[platformsKey(id)] = config.platforms.mapTo(HashSet()) { p -> p.trim().uppercase() }
             it[keepNoPlatformKey(id)] = config.keepNoPlatform
             config.callingPointTimes?.let { times -> it[timesKey(id)] = times } ?: it.remove(timesKey(id))
+            config.stationName?.let { name -> it[stationNameKey(id)] = name } ?: it.remove(stationNameKey(id))
+            config.spareSpace?.let { spare -> it[spareSpaceKey(id)] = spare.name } ?: it.remove(spareSpaceKey(id))
         }
     }
 
@@ -65,6 +74,8 @@ class WidgetConfigStore(private val context: Context) {
                 prefs.remove(platformsKey(it))
                 prefs.remove(keepNoPlatformKey(it))
                 prefs.remove(timesKey(it))
+                prefs.remove(stationNameKey(it))
+                prefs.remove(spareSpaceKey(it))
             }
         }
     }
@@ -75,4 +86,6 @@ class WidgetConfigStore(private val context: Context) {
     private fun platformsKey(id: Int) = stringSetPreferencesKey("w${id}_platforms")
     private fun keepNoPlatformKey(id: Int) = booleanPreferencesKey("w${id}_keep_no_platform")
     private fun timesKey(id: Int) = booleanPreferencesKey("w${id}_calling_point_times")
+    private fun stationNameKey(id: Int) = booleanPreferencesKey("w${id}_station_name")
+    private fun spareSpaceKey(id: Int) = stringPreferencesKey("w${id}_spare_space")
 }
