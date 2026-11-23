@@ -6,10 +6,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,7 +17,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.LaunchedEffect
@@ -28,7 +25,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
@@ -38,12 +34,16 @@ import io.github.inputbiscuit.dotboard.core.data.BoardQuery
 import io.github.inputbiscuit.dotboard.core.data.DepartureException
 import io.github.inputbiscuit.dotboard.core.model.platforms
 import io.github.inputbiscuit.dotboard.core.render.BoardContent
+import io.github.inputbiscuit.dotboard.core.render.SpareSpace
 import io.github.inputbiscuit.dotboard.core.render.toBoardMessage
 import io.github.inputbiscuit.dotboard.core.stations.StationList
 import io.github.inputbiscuit.dotboard.data.Settings
 import io.github.inputbiscuit.dotboard.data.platformBoard
 import io.github.inputbiscuit.dotboard.location.LocationFeatures
+import io.github.inputbiscuit.dotboard.ui.components.RadioGroup
 import io.github.inputbiscuit.dotboard.ui.components.StationField
+import io.github.inputbiscuit.dotboard.ui.components.SwitchRow
+import io.github.inputbiscuit.dotboard.ui.components.spareSpaceLabel
 import io.github.inputbiscuit.dotboard.ui.home.BoardPreview
 import io.github.inputbiscuit.dotboard.ui.theme.DotboardTheme
 import kotlinx.coroutines.delay
@@ -77,6 +77,8 @@ class WidgetConfigActivity : ComponentActivity() {
                 var keepNoPlatform by remember { mutableStateOf(false) }
                 // Null follows the setting in Settings.
                 var times by remember { mutableStateOf<Boolean?>(null) }
+                var stationName by remember { mutableStateOf<Boolean?>(null) }
+                var spare by remember { mutableStateOf<SpareSpace?>(null) }
                 var loaded by remember { mutableStateOf(false) }
 
                 LaunchedEffect(Unit) {
@@ -88,6 +90,8 @@ class WidgetConfigActivity : ComponentActivity() {
                     platforms = existing?.platforms.orEmpty()
                     keepNoPlatform = existing?.keepNoPlatform ?: false
                     times = existing?.callingPointTimes
+                    stationName = existing?.stationName
+                    spare = existing?.spareSpace
                     loaded = true
                 }
 
@@ -120,7 +124,16 @@ class WidgetConfigActivity : ComponentActivity() {
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         val showTimes = times ?: settings.showCallingPointTimes
-                        BoardPreview(preview, settings.theme, settings.use24h, callingPointTimes = showTimes)
+                        val showName = stationName ?: settings.showStationName
+                        val useSpare = spare ?: settings.spareSpace
+                        BoardPreview(
+                            preview,
+                            settings.theme,
+                            settings.use24h,
+                            callingPointTimes = showTimes,
+                            stationName = showName,
+                            spareSpace = useSpare,
+                        )
                         if (loaded) {
                             if (BuildConfig.LOCATION) {
                                 LocationFeatures.FollowSection(
@@ -153,19 +166,30 @@ class WidgetConfigActivity : ComponentActivity() {
                                     onKeepNoPlatform = { keepNoPlatform = it },
                                 )
                             }
-                            Row(
-                                Modifier.fillMaxWidth().clickable { times = !showTimes },
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Column(Modifier.weight(1f)) {
-                                    Text("Times at calling points", style = MaterialTheme.typography.bodyLarge)
-                                    Text(
-                                        "For this board. The default is in Dotboard's settings.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                    )
-                                }
-                                Switch(checked = showTimes, onCheckedChange = { times = it })
-                            }
+                            SwitchRow(
+                                title = "Times at calling points",
+                                subtitle = "For this board. The default is in Dotboard's settings.",
+                                checked = showTimes,
+                                onChange = { times = it },
+                            )
+                            SwitchRow(
+                                title = "Station name",
+                                subtitle = "Across the top, when the board has room.",
+                                checked = showName,
+                                onChange = { stationName = it },
+                            )
+                            Text("Use spare space for", style = MaterialTheme.typography.bodyLarge)
+                            RadioGroup(
+                                options = SpareSpace.entries,
+                                selected = useSpare,
+                                label = ::spareSpaceLabel,
+                                onSelect = { spare = it },
+                            )
+                            Text(
+                                "When this board is bigger than it needs to be: more trains, or the later trains' " +
+                                    "calling points first.",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
                         }
                         if (settings.useSampleData) {
                             Text(
@@ -176,6 +200,7 @@ class WidgetConfigActivity : ComponentActivity() {
                         Button(
                             onClick = {
                                 lifecycleScope.launch {
+                                    val current = app.settings.current()
                                     val config = WidgetConfig(
                                         crs,
                                         filter,
@@ -184,7 +209,9 @@ class WidgetConfigActivity : ComponentActivity() {
                                         platforms = if (follow) emptySet() else platforms,
                                         keepNoPlatform = keepNoPlatform,
                                         // Only kept when it differs from Settings, so the board follows later changes there.
-                                        callingPointTimes = times?.takeIf { it != app.settings.current().showCallingPointTimes },
+                                        callingPointTimes = times?.takeIf { it != current.showCallingPointTimes },
+                                        stationName = stationName?.takeIf { it != current.showStationName },
+                                        spareSpace = spare?.takeIf { it != current.spareSpace },
                                     )
                                     app.widgetConfigs.set(widgetId, config)
                                     WidgetScheduler.ensure(this@WidgetConfigActivity)

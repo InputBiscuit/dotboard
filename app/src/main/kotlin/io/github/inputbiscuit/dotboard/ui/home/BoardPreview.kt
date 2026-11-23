@@ -24,6 +24,7 @@ import io.github.inputbiscuit.dotboard.core.render.BoardFrame
 import io.github.inputbiscuit.dotboard.core.render.BoardGeometry
 import io.github.inputbiscuit.dotboard.core.render.DotRasterizer
 import io.github.inputbiscuit.dotboard.core.render.LedTheme
+import io.github.inputbiscuit.dotboard.core.render.SpareSpace
 import io.github.inputbiscuit.dotboard.render.BoardBitmaps
 import java.time.LocalTime
 
@@ -39,6 +40,8 @@ fun BoardPreview(
     modifier: Modifier = Modifier,
     updatedAt: LocalTime? = null,
     callingPointTimes: Boolean = false,
+    stationName: Boolean = false,
+    spareSpace: SpareSpace = SpareSpace.TRAINS,
 ) {
     BoxWithConstraints(modifier.fillMaxWidth().aspectRatio(BoardGeometry.BASE_COLS / BoardGeometry.BASE_ROWS.toFloat())) {
         val widthPx = with(LocalDensity.current) { maxWidth.roundToPx() }
@@ -54,6 +57,8 @@ fun BoardPreview(
         val currentUse24h by rememberUpdatedState(use24h)
         val currentUpdatedAt by rememberUpdatedState(updatedAt)
         val currentTimes by rememberUpdatedState(callingPointTimes)
+        val currentName by rememberUpdatedState(stationName)
+        val currentSpare by rememberUpdatedState(spareSpace)
         var frameCount by remember { mutableIntStateOf(0) }
 
         LaunchedEffect(rasterizer, bitmap) {
@@ -72,6 +77,8 @@ fun BoardPreview(
                     showSeconds = true,
                     updatedAt = currentUpdatedAt,
                     callingPointTimes = currentTimes,
+                    stationName = currentName,
+                    spareSpace = currentSpare,
                 )
                 val plan = renderer.plan(frame, cols, rows)
                 val buffer = renderer.render(plan, Animation.at(now - start, plan))

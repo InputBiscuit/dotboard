@@ -80,6 +80,17 @@ object WidgetRenderer {
         )
     }
 
+    /** The most trains the widget can list one per line at any of [sizesDp], so it can ask for enough of them. */
+    fun trainRows(context: Context, sizesDp: List<SizeF>, stationName: Boolean): Int {
+        val density = context.resources.displayMetrics.density
+        val insets = boardInsets(context)
+        return sizesDp.maxOfOrNull { size ->
+            val heightPx = (size.height * density).toInt() - insets.top - insets.bottom
+            val widthPx = (size.width * density).toInt() - insets.left - insets.right
+            widgetRenderer.trainRows(BoardGeometry.fit(widthPx.coerceAtLeast(1), heightPx.coerceAtLeast(1)).rows, stationName)
+        } ?: 0
+    }
+
     /**
      * One RemoteViews per distinct size the launcher reports (e.g. a foldable's inner and outer screens);
      * the launcher picks the best fit. Android 11 only takes a landscape and a portrait layout, so there it uses

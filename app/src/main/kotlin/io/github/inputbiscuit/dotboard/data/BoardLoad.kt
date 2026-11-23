@@ -28,7 +28,7 @@ fun platformBoard(board: Board, platforms: Set<String>, keepUnknown: Boolean): B
     if (filtered.departures.isNotEmpty() || board.departures.isEmpty()) return BoardContent.Departures(filtered)
     val which = platforms.sortedWith(PlatformOrder).joinToString(", ")
     val label = if (platforms.size == 1) "Platform $which" else "Platforms $which"
-    return BoardContent.Message("No trains yet", "$label: platforms are often shown just before departure.")
+    return BoardContent.Message("No trains yet", "$label: platforms are often shown just before departure.", board.stationName)
 }
 
 /**

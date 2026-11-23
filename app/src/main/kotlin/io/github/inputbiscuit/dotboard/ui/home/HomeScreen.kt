@@ -40,6 +40,8 @@ fun HomeScreen(actions: List<HomeAction>, vm: HomeViewModel = viewModel()) {
                 theme = settings.theme,
                 use24h = settings.use24h,
                 callingPointTimes = settings.showCallingPointTimes,
+                stationName = settings.showStationName,
+                spareSpace = settings.spareSpace,
                 modifier = Modifier.padding(horizontal = 16.dp).clickable(onClick = vm::refresh),
             )
             Text(

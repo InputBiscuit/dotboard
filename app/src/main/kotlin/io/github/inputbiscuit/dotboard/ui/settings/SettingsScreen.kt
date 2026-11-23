@@ -1,7 +1,6 @@
 package io.github.inputbiscuit.dotboard.ui.settings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,15 +8,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,10 +20,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -37,11 +30,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.inputbiscuit.dotboard.BuildConfig
 import io.github.inputbiscuit.dotboard.core.data.FakeScenario
 import io.github.inputbiscuit.dotboard.core.render.LedTheme
+import io.github.inputbiscuit.dotboard.core.render.SpareSpace
 import io.github.inputbiscuit.dotboard.data.Settings
 import io.github.inputbiscuit.dotboard.location.LocationFeatures
 import io.github.inputbiscuit.dotboard.ui.components.DotboardScaffold
+import io.github.inputbiscuit.dotboard.ui.components.RadioGroup
 import io.github.inputbiscuit.dotboard.ui.components.SectionTitle
 import io.github.inputbiscuit.dotboard.ui.components.StationField
+import io.github.inputbiscuit.dotboard.ui.components.SwitchRow
+import io.github.inputbiscuit.dotboard.ui.components.spareSpaceLabel
 
 @Composable
 fun SettingsScreen(onBack: () -> Unit, onKeyGuide: () -> Unit, onAbout: () -> Unit, vm: SettingsViewModel = viewModel()) {
@@ -105,6 +102,24 @@ fun SettingsScreen(onBack: () -> Unit, onKeyGuide: () -> Unit, onAbout: () -> Un
             checked = settings.showCallingPointTimes,
             onChange = { on -> vm.update { it.copy(showCallingPointTimes = on) } },
         )
+        SwitchRow(
+            title = "Station name",
+            subtitle = "\"London Paddington Station\" across the top, when the board has room. Each board can change this.",
+            checked = settings.showStationName,
+            onChange = { on -> vm.update { it.copy(showStationName = on) } },
+        )
+        Text("Use spare space for", style = MaterialTheme.typography.bodyLarge)
+        RadioGroup(
+            options = SpareSpace.entries,
+            selected = settings.spareSpace,
+            label = ::spareSpaceLabel,
+            onSelect = { spare -> vm.update { it.copy(spareSpace = spare) } },
+        )
+        Text(
+            "On a bigger board, list more trains, or show the 2nd, 3rd and later trains' calling points first. " +
+                "Each board can change this.",
+            style = MaterialTheme.typography.bodySmall,
+        )
 
         SectionTitle("Widget")
         Text("Refresh departures", style = MaterialTheme.typography.bodyLarge)
@@ -153,46 +168,6 @@ private fun ApiKeyField(hasKey: Boolean, onSave: (String) -> Unit) {
             Button(onClick = { onSave(text); text = "" }, enabled = text.isNotBlank()) { Text("Save key") }
             TextButton(onClick = { show = !show }) { Text(if (show) "Hide" else "Show") }
             if (hasKey) TextButton(onClick = { onSave("") }) { Text("Remove") }
-        }
-    }
-}
-
-@Composable
-private fun SwitchRow(title: String, subtitle: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().clickable { onChange(!checked) }.padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall)
-        }
-        Switch(checked = checked, onCheckedChange = onChange)
-    }
-}
-
-@Composable
-private fun <T> RadioGroup(
-    options: List<T>,
-    selected: T,
-    label: (T) -> String,
-    onSelect: (T) -> Unit,
-    leading: (@Composable (T) -> Unit)? = null,
-) {
-    Column(Modifier.selectableGroup()) {
-        options.forEach { option ->
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .selectable(selected = option == selected, onClick = { onSelect(option) }, role = Role.RadioButton)
-                    .padding(vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                RadioButton(selected = option == selected, onClick = null)
-                leading?.invoke(option)
-                Text(label(option))
-            }
         }
     }
 }

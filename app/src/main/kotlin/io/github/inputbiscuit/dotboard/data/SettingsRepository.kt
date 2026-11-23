@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import io.github.inputbiscuit.dotboard.core.data.FakeScenario
 import io.github.inputbiscuit.dotboard.core.render.LedTheme
+import io.github.inputbiscuit.dotboard.core.render.SpareSpace
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -26,6 +27,10 @@ data class Settings(
     val use24h: Boolean = true,
     /** Times at each stop in "Calling at" (boards can override it in their own setup). */
     val showCallingPointTimes: Boolean = false,
+    /** The station's name across the top of boards (boards can override it). */
+    val showStationName: Boolean = true,
+    /** What fills a board's spare rows: more trains or later trains' calling points (boards can override it). */
+    val spareSpace: SpareSpace = SpareSpace.TRAINS,
     val onboardingDone: Boolean = false,
 ) {
     companion object {
@@ -51,6 +56,8 @@ class SettingsRepository(private val context: Context) {
             prefs[REFRESH_MINUTES] = s.refreshMinutes
             prefs[USE_24H] = s.use24h
             prefs[CALLING_POINT_TIMES] = s.showCallingPointTimes
+            prefs[STATION_NAME] = s.showStationName
+            prefs[SPARE_SPACE] = s.spareSpace.name
             prefs[ONBOARDING_DONE] = s.onboardingDone
         }
     }
@@ -65,6 +72,8 @@ class SettingsRepository(private val context: Context) {
         refreshMinutes = this[REFRESH_MINUTES]?.takeIf { it in Settings.REFRESH_CHOICES } ?: 15,
         use24h = this[USE_24H] ?: true,
         showCallingPointTimes = this[CALLING_POINT_TIMES] ?: false,
+        showStationName = this[STATION_NAME] ?: true,
+        spareSpace = enumOrDefault(this[SPARE_SPACE], SpareSpace.TRAINS),
         onboardingDone = this[ONBOARDING_DONE] ?: false,
     )
 
@@ -80,6 +89,8 @@ class SettingsRepository(private val context: Context) {
         val REFRESH_MINUTES = intPreferencesKey("refresh_minutes")
         val USE_24H = booleanPreferencesKey("use_24h")
         val CALLING_POINT_TIMES = booleanPreferencesKey("show_calling_point_times")
+        val STATION_NAME = booleanPreferencesKey("show_station_name")
+        val SPARE_SPACE = stringPreferencesKey("spare_space")
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
     }
 }
